@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NightStalkerCompanion.Views.ReticlePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:NightStalkerCompanion.Controls"
+    xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
+    Title="Марка"
+    x:DataType="vm:ReticleViewModel"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{StaticResource Screen}">
+
+    <!-- Screen 02: six real reticle previews and a separate "no reticle". Style 0
+         means the scope shows an empty frame, so it cannot be a crossed-out tile. -->
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
+
+            <Grid
+                Padding="16,12"
+                ColumnDefinitions="*,Auto">
+                <Label
+                    Grid.Column="0"
+                    Style="{StaticResource ScreenTitle}"
+                    Text="Прицельная марка" />
+                <Label
+                    Grid.Column="1"
+                    Style="{StaticResource BarText}"
+                    VerticalTextAlignment="Center"
+                    Text="{Binding GroupCaption}" />
+            </Grid>
+
+            <!-- A…E -->
+            <FlexLayout
+                BindableLayout.ItemsSource="{Binding GroupPicks}"
+                Wrap="Wrap"
+                Padding="16,0,16,12">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:GroupPick">
+                        <Border
+                            Padding="12,7"
+                            Margin="0,0,6,0"
+                            BackgroundColor="{StaticResource Panel}"
+                            Stroke="{Binding IsCurrent, Converter={StaticResource BoolColor}, ConverterParameter='Accent,Line'}"
+                            StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ReticleViewModel}}, Path=PickGroupCommand}"
+                                    CommandParameter="{Binding Index}" />
+                            </Border.GestureRecognizers>
+                            <Label
+                                FontFamily="{StaticResource MonoFont}"
+                                FontSize="11.5"
+                                TextColor="{StaticResource Ink2}"
+                                Text="{Binding Letter}" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+
+            <!-- Six previews + "no reticle", four per row -->
+            <FlexLayout
+                BindableLayout.ItemsSource="{Binding StylePicks}"
+                Wrap="Wrap"
+                JustifyContent="SpaceBetween"
+                Padding="16,0">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:StylePick">
+                        <Border
+                            WidthRequest="84"
+                            HeightRequest="84"
+                            Margin="0,0,0,8"
+                            Padding="5"
+                            BackgroundColor="{StaticResource Panel}"
+                            Stroke="{Binding IsCurrent, Converter={StaticResource BoolColor}, ConverterParameter='Line2,Line'}"
+                            StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ReticleViewModel}}, Path=PickStyleCommand}"
+                                    CommandParameter="{Binding Style}" />
+                            </Border.GestureRecognizers>
+                            <Grid RowDefinitions="*,Auto" RowSpacing="3">
+                                <Image
+                                    Grid.Row="0"
+                                    Source="{Binding Preview}"
+                                    Aspect="AspectFit"
+                                    IsVisible="{Binding Preview, Converter={StaticResource IsNotNull}}" />
+                                <Label
+                                    Grid.Row="0"
+                                    Style="{StaticResource Note}"
+                                    HorizontalTextAlignment="Center"
+                                    VerticalTextAlignment="Center"
+                                    Text="марки нет"
+                                    IsVisible="{Binding Preview, Converter={StaticResource IsNull}}" />
+                                <Label
+                                    Grid.Row="1"
+                                    FontFamily="{StaticResource MonoFont}"
+                                    FontSize="9.5"
+                                    HorizontalOptions="Center"
+                                    TextColor="{StaticResource Ink3}"
+                                    Text="{Binding Caption}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+
+            <!-- Read-out: one line, in the instrument's own words -->
+            <Label
+                Style="{StaticResource Note}"
+                Padding="16,8,16,12"
+                Text="{Binding Readout}" />
+
+            <!-- Rows: colour, offsets -->
+            <VerticalStackLayout Padding="16,0">
+                <Grid
+                    ColumnDefinitions="*,Auto,Auto"
+                    ColumnSpacing="8"
+                    Padding="0,11">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleColorCommand}" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        Grid.Column="0"
+                        Style="{StaticResource RowLabel}"
+                        Text="Цвет" />
+                    <Label
+                        Grid.Column="1"
+                        Style="{StaticResource RowValue}"
+                        Text="{Binding ColorCaption}" />
+                    <Label
+                        Grid.Column="2"
+                        Style="{StaticResource RowAction}"
+                        Text="›" />
+                </Grid>
+
+                <Grid
+                    ColumnDefinitions="*,Auto,Auto"
+                    ColumnSpacing="8"
+                    Padding="0,11">
+                    <Label
+                        Grid.Column="0"
+                        Style="{StaticResource RowLabel}"
+                        Text="Смещение X" />
+                    <Label
+                        Grid.Column="1"
+                        Style="{StaticResource RowValue}"
+                        Text="{Binding PosX}" />
+                    <HorizontalStackLayout Grid.Column="2" Spacing="4">
+                        <Button
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding NudgeCommand}"
+                            CommandParameter="X:-1"
+                            Text="−" />
+                        <Button
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding NudgeCommand}"
+                            CommandParameter="X:+1"
+                            Text="+" />
+                    </HorizontalStackLayout>
+                </Grid>
+
+                <Grid
+                    ColumnDefinitions="*,Auto,Auto"
+                    ColumnSpacing="8"
+                    Padding="0,11">
+                    <Label
+                        Grid.Column="0"
+                        Style="{StaticResource RowLabel}"
+                        Text="Смещение Y" />
+                    <Label
+                        Grid.Column="1"
+                        Style="{StaticResource RowValue}"
+                        Text="{Binding PosY}" />
+                    <HorizontalStackLayout Grid.Column="2" Spacing="4">
+                        <Button
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding NudgeCommand}"
+                            CommandParameter="Y:-1"
+                            Text="−" />
+                        <Button
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding NudgeCommand}"
+                            CommandParameter="Y:+1"
+                            Text="+" />
+                    </HorizontalStackLayout>
+                </Grid>
+            </VerticalStackLayout>
+
+            <controls:AlertCard
+                Margin="16,12,16,8"
+                Text="{Binding OffsetTag}" />
+
+            <controls:AlertCard
+                Warning="True"
+                Text="Выбор группы стоит записи: 6009 отвечает только за активную группу, а par в URL ничего не выбирает. Экран сначала выбирает группу, потом читает её марку." />
+
+            <controls:WriteBar
+                State="{Binding State}"
+                Margin="0,8,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

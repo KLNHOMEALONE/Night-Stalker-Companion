@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NightStalkerCompanion.Views.UnitsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:NightStalkerCompanion.Controls"
+    xmlns:services="clr-namespace:NightStalkerCompanion.Services"
+    xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
+    Title="Единицы"
+    x:DataType="vm:UnitsViewModel"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{StaticResource Screen}">
+
+    <!-- Screen 07: one field changes, the table shows what every number becomes. -->
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
+
+            <Label
+                Padding="16,12"
+                Style="{StaticResource ScreenTitle}"
+                Text="Единицы" />
+
+            <Label
+                Padding="16,0,16,12"
+                Style="{StaticResource Note}"
+                Text="Прибор хранит метрику. Ярды — режим показа: переключение не меняет ни одно число в профиле." />
+
+            <!-- .seg: the two modes -->
+            <Grid
+                Margin="16,0,16,12"
+                ColumnDefinitions="*,*"
+                ColumnSpacing="8">
+                <Button
+                    Grid.Column="0"
+                    Style="{StaticResource GhostButton}"
+                    Command="{Binding PickMetricCommand}"
+                    Text="Метрическая" />
+                <Button
+                    Grid.Column="1"
+                    Style="{StaticResource GhostButton}"
+                    Command="{Binding PickImperialCommand}"
+                    Text="Имперская" />
+            </Grid>
+
+            <Label
+                Padding="16,12,16,8"
+                Style="{StaticResource SectionHeader}"
+                Text="ЧТО СТАНОВИТСЯ С ЧИСЕЛ" />
+
+            <VerticalStackLayout
+                Padding="16,0"
+                BindableLayout.ItemsSource="{Binding Conversions}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ConversionRow">
+                        <Grid
+                            ColumnDefinitions="*,Auto,Auto"
+                            ColumnSpacing="8"
+                            Padding="0,7">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource RowLabel}"
+                                Text="{Binding Label}" />
+                            <Label
+                                Grid.Column="1"
+                                Style="{StaticResource RowValue}"
+                                FontSize="13"
+                                Text="{Binding Metric}" />
+                            <Label
+                                Grid.Column="2"
+                                Style="{StaticResource Unit}"
+                                WidthRequest="110"
+                                Text="{Binding Imperial, StringFormat='→ {0}'}" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <controls:AlertCard
+                Margin="16,16,16,8"
+                Text="{Binding BcTag}" />
+
+            <controls:WriteBar
+                State="{Binding State}"
+                Margin="0,8,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

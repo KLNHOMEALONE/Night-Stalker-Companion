@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NightStalkerCompanion.Views.GalleryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:NightStalkerCompanion.Controls"
+    xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
+    Title="Галерея"
+    x:DataType="vm:GalleryViewModel"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{StaticResource Screen}">
+
+    <!-- Screen 05: same grid, but the frame carries the scope's state — the group
+         border and the reticle style badge — so a clip can be traced back to the
+         setting that made it. -->
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
+
+            <Grid
+                Padding="16,12"
+                ColumnDefinitions="*,Auto">
+                <Label
+                    Grid.Column="0"
+                    Style="{StaticResource ScreenTitle}"
+                    Text="Галерея" />
+                <Label
+                    Grid.Column="1"
+                    Style="{StaticResource BarText}"
+                    VerticalTextAlignment="Center"
+                    Text="карта" />
+            </Grid>
+
+            <!-- .filter chips: media type first, then the group filter -->
+            <VerticalStackLayout
+                BindableLayout.ItemsSource="{Binding GroupPicks}"
+                Padding="16,0,16,12">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:GroupPick">
+                        <Border
+                            Padding="12,7"
+                            Margin="0,0,6,6"
+                            BackgroundColor="{StaticResource Panel}"
+                            Stroke="{Binding IsCurrent, Converter={StaticResource BoolColor}, ConverterParameter='Accent,Line'}"
+                            StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GalleryViewModel}}, Path=FilterGroupCommand}"
+                                    CommandParameter="{Binding Index}" />
+                            </Border.GestureRecognizers>
+                            <Label
+                                FontFamily="{StaticResource MonoFont}"
+                                FontSize="11"
+                                Text="{Binding Letter}" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Label
+                Style="{StaticResource Note}"
+                Padding="16,0,16,12"
+                Text="{Binding GroupFilterNote}" />
+
+            <Label
+                IsVisible="{Binding IsEmpty}"
+                Style="{StaticResource Note}"
+                Padding="16,0,16,12"
+                Text="{Binding EmptyNotice}"
+                TextColor="{StaticResource Warn}" />
+
+            <VerticalStackLayout
+                IsVisible="{Binding HasItems}"
+                Padding="16,0">
+                <Label
+                    Style="{StaticResource Note}"
+                    Text="Кадр — из файла с карты." />
+            </VerticalStackLayout>
+
+            <controls:WriteBar
+                State="{Binding State}"
+                Margin="0,8,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

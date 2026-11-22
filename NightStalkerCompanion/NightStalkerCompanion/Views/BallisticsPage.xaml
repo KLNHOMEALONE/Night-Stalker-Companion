@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NightStalkerCompanion.Views.BallisticsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:NightStalkerCompanion.Controls"
+    xmlns:services="clr-namespace:NightStalkerCompanion.Services"
+    xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
+    Title="Баллистика"
+    x:DataType="vm:BallisticsViewModel"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{StaticResource Screen}">
+
+    <!-- Screen 03. The original drew an arc indicator next to a stepper and printed
+         the same number twice. Here a field is one digit, one unit, one step. -->
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
+
+            <Grid
+                Padding="16,12"
+                ColumnDefinitions="*,Auto">
+                <Label
+                    Grid.Column="0"
+                    Style="{StaticResource ScreenTitle}"
+                    Text="Баллистика" />
+                <Label
+                    Grid.Column="1"
+                    Style="{StaticResource BarText}"
+                    VerticalTextAlignment="Center"
+                    Text="{Binding ReadoutText}" />
+            </Grid>
+
+            <VerticalStackLayout
+                Padding="16,0"
+                BindableLayout.ItemsSource="{Binding Rows}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FieldRow">
+                        <Grid
+                            ColumnDefinitions="*,Auto,Auto"
+                            ColumnSpacing="8"
+                            Padding="0,11">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource RowLabel}"
+                                Text="{Binding Label}" />
+
+                            <HorizontalStackLayout
+                                Grid.Column="1"
+                                Spacing="4"
+                                IsVisible="{Binding Writable}">
+                                <Button
+                                    Style="{StaticResource StepperButton}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BallisticsViewModel}}, Path=StepCommand}"
+                                    CommandParameter="{Binding Field, StringFormat='{0}:-1'}"
+                                    Text="−" />
+                                <Button
+                                    Style="{StaticResource StepperButton}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BallisticsViewModel}}, Path=StepCommand}"
+                                    CommandParameter="{Binding Field, StringFormat='{0}:+1'}"
+                                    Text="+" />
+                            </HorizontalStackLayout>
+
+                            <VerticalStackLayout
+                                Grid.Column="2"
+                                Spacing="0"
+                                HorizontalOptions="End">
+                                <Label
+                                    Style="{StaticResource RowValue}"
+                                    FontSize="16"
+                                    Text="{Binding Value}" />
+                                <Label
+                                    Style="{StaticResource Unit}"
+                                    HorizontalTextAlignment="End"
+                                    Text="{Binding Unit}"
+                                    IsVisible="{Binding HasUnit}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Label
+                Padding="16,16,16,8"
+                Style="{StaticResource SectionHeader}"
+                Text="СНОС НА ДИСТАНЦИЯХ" />
+
+            <VerticalStackLayout
+                Padding="16,0"
+                BindableLayout.ItemsSource="{Binding Drops}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="services:DropRow">
+                        <Grid
+                            ColumnDefinitions="*,Auto,Auto"
+                            ColumnSpacing="12"
+                            Padding="0,7">
+                            <Label
+                                Grid.Column="0"
+                                Style="{StaticResource RowLabel}"
+                                Text="{Binding Distance}" />
+                            <Label
+                                Grid.Column="1"
+                                Style="{StaticResource RowValueMuted}"
+                                WidthRequest="86"
+                                Text="{Binding Drop}" />
+                            <Label
+                                Grid.Column="2"
+                                Style="{StaticResource RowValueMuted}"
+                                WidthRequest="86"
+                                Text="{Binding FlightTime}" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <!-- The table is a client calculation, and the screen has to say which
+                 model produced it rather than present it as the scope's word. -->
+            <controls:AlertCard
+                Margin="16,12,16,8"
+                Warning="True"
+                Text="{Binding DropModelNote}" />
+
+            <controls:WriteBar
+                State="{Binding State}"
+                Margin="0,8,0,0">
+                <Grid
+                    ColumnDefinitions="*,Auto"
+                    ColumnSpacing="8"
+                    Margin="0,12,0,0">
+                    <Button
+                        Grid.Column="0"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding WriteCommand}"
+                        IsEnabled="{Binding HasChanges}"
+                        Text="Записать в профиль" />
+                    <Button
+                        Grid.Column="1"
+                        Style="{StaticResource GhostButton}"
+                        Command="{Binding DiscardCommand}"
+                        IsEnabled="{Binding HasChanges}"
+                        Text="Сбросить" />
+                </Grid>
+                <Label
+                    Style="{StaticResource Note}"
+                    Margin="0,8,0,0"
+                    Text="Черновик правится на экране и не уходит в прицел, пока не нажата кнопка. После записи каждая строка перечитывается, и несопадение видно здесь же." />
+            </controls:WriteBar>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

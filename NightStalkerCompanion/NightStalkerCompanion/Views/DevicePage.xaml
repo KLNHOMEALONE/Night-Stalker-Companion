@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NightStalkerCompanion.Views.DevicePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:NightStalkerCompanion.Controls"
+    xmlns:services="clr-namespace:NightStalkerCompanion.Services"
+    xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
+    Title="Девайс"
+    x:DataType="vm:DeviceViewModel"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{StaticResource Screen}">
+
+    <!-- Screen 00 of ui/prototype/index.html. The dashboard shows numbers instead of
+         buttons; the group list shows where each reticle lives before you start
+         editing; the state section states what the firmware cannot do. -->
+
+    <Grid RowDefinitions="*,Auto" RowSpacing="0">
+
+    <ScrollView Grid.Row="0">
+        <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
+
+            <!-- .bar: firmware on the left, battery on the right. iOS already draws
+                 the clock, so the mock-up's 19:42 is not repeated here. -->
+            <Grid
+                Padding="16,12"
+                ColumnDefinitions="Auto,*,Auto">
+                <Label
+                    Grid.Column="0"
+                    Style="{StaticResource BarText}"
+                    Text="PARD" />
+                <Label
+                    Grid.Column="1"
+                    Style="{StaticResource BarText}"
+                    HorizontalTextAlignment="Center"
+                    Text="{Binding FirmwareShort}" />
+                <Label
+                    Grid.Column="2"
+                    Style="{StaticResource BarText}"
+                    Text="{Binding BatteryText}" />
+            </Grid>
+
+            <!-- .status: the instrument line, in the same place on every screen -->
+            <controls:StatusStrip
+                Caption1="Группа"
+                Caption2="Марка"
+                Caption3="1-й ноль"
+                Caption4="Скорость"
+                Value1="{Binding GroupLetter}"
+                Value2="{Binding ReticleCaption}"
+                Value3="{Binding ZeroText}"
+                Value4="{Binding VelocityText}" />
+
+            <!-- Shown only when a saved snapshot stands in for the device -->
+            <Label
+                IsVisible="{Binding SampleNotice, Converter={StaticResource IsNotNull}}"
+                Style="{StaticResource Note}"
+                Margin="16,0,16,12"
+                Text="{Binding SampleNotice}"
+                TextColor="{StaticResource Warn}" />
+
+            <Label
+                Padding="16,12,16,8"
+                Style="{StaticResource SectionHeader}"
+                Text="ГРУППЫ МАРОК" />
+
+            <!-- .rows / .grow: 38px preview, letter, description, tail -->
+            <VerticalStackLayout
+                BindableLayout.ItemsSource="{Binding GroupRows}"
+                Padding="16,0">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="services:GroupLine">
+                        <Grid
+                            ColumnDefinitions="38,18,*,Auto"
+                            ColumnSpacing="8"
+                            Padding="0,10">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DeviceViewModel}}, Path=OpenGroupCommand}"
+                                    CommandParameter="{Binding Index}" />
+                            </Grid.GestureRecognizers>
+
+                            <Image
+                                Grid.Column="0"
+                                HeightRequest="28"
+                                Source="{Binding Preview}"
+                                Aspect="AspectFit"
+                                IsVisible="{Binding Preview, Converter={StaticResource IsNotNull}}" />
+
+                            <Label
+                                Grid.Column="1"
+                                Style="{StaticResource RowValue}"
+                                FontSize="13"
+                                TextColor="{StaticResource Ink2}"
+                                Text="{Binding Letter}" />
+
+                            <Label
+                                Grid.Column="2"
+                                FontSize="12.5"
+                                LineHeight="1.3"
+                                VerticalTextAlignment="Center"
+                                TextColor="{StaticResource Ink2}"
+                                Text="{Binding ReticleText}" />
+
+                            <Label
+                                Grid.Column="3"
+                                FontSize="10.5"
+                                VerticalTextAlignment="Center"
+                                TextColor="{StaticResource Ink3}"
+                                Text="{Binding Tail}" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <!-- Until the walk has run, the other four groups are unknown, and the
+                 honest thing is to say so and offer the command that reads them. -->
+            <Label
+                IsVisible="{Binding GroupsRead, Converter={StaticResource InvertBool}}"
+                Style="{StaticResource Note}"
+                Padding="16,4,16,8"
+                Text="Марки групп B…E ещё не читаны: чтобы их увидеть, нужно выбрать каждую группу записью. Команда — на экране «Группы A–E»." />
+
+            <Label
+                Padding="16,16,16,8"
+                Style="{StaticResource SectionHeader}"
+                Text="ПОСЛЕДНИЕ РОЛИКИ" />
+
+            <Label
+                Style="{StaticResource Note}"
+                Padding="16,0,16,8"
+                Text="Записи — на вкладке «Галерея». Список по Wi‑Fi отстаёт от прибора на 9—20 с после остановки записи." />
+
+            <Label
+                Padding="16,16,16,8"
+                Style="{StaticResource SectionHeader}"
+                Text="СОСТОЯНИЕ ПРИЦЕЛА" />
+
+            <!-- Real findings, not placeholders. If the scope cannot do something out
+                 of the box, the app has to say it in words. -->
+            <controls:AlertCard
+                Text="Режим дистанции: только чтение. Прошивка принимает по команде 6018 значение 1, а 0 и 2 отклоняет; управляется он формой POST, которую мы ещё не перехватили." />
+
+            <controls:AlertCard
+                Warning="True"
+                Text="Заряд: источник не подтверждён. В оригинале строка Battery Life есть, команды под неё мы не проверяли, поэтому вместо числа прочерк." />
+
+            <controls:AlertCard
+                Text="Карта: быстрее всего читать её в картридере. По Wi‑Fi список медиа отстаёт на 9—20 с." />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+            <!-- .writebar with the screen's actions inside: one primary action, then
+                 the two secondary ones side by side, exactly as in the mock-up. -->
+            <controls:WriteBar
+                Grid.Row="1"
+                State="{Binding State}">
+                <Button
+                    Style="{StaticResource PrimaryButton}"
+                    Margin="0,12,0,0"
+                    Command="{Binding OpenLiveCommand}"
+                    Text="Живой вид" />
+                <Grid
+                    ColumnDefinitions="*,*"
+                    ColumnSpacing="8">
+                    <Button
+                        Grid.Column="0"
+                        Style="{StaticResource GhostButton}"
+                        Command="{Binding OpenBallisticsCommand}"
+                        Text="Баллистика" />
+                    <Button
+                        Grid.Column="1"
+                        Style="{StaticResource GhostButton}"
+                        Command="{Binding OpenGroupsCommand}"
+                        Text="Группы A–E" />
+                </Grid>
+            </controls:WriteBar>
+
+        </Grid>
+
+</ContentPage>

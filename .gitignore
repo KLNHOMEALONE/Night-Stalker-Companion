@@ -1,0 +1,28 @@
+# Everything at this level is ignored by default, and only the application is
+# tracked. This is a deliberate allow-list, not an ignore-list: the same directory
+# holds firmware images, Ghidra projects, packet captures, a JDK and the reverse
+# engineering notes, and any future folder added here must be allowed on purpose
+# rather than remembered by whoever writes the next rule.
+/*
+!/.gitignore
+!/NightStalkerCompanion/
+
+# Build output and IDE state
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# macOS
+.DS_Store
+
+# Test and coverage output
+[Tt]est[Rr]esult*/
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml

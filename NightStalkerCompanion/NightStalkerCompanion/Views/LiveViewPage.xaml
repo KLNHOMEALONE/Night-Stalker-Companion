@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NightStalkerCompanion.Views.LiveViewPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:NightStalkerCompanion.Controls"
+    xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
+    Title="Живой вид"
+    x:DataType="vm:LiveViewModel"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{StaticResource Screen}">
+
+    <!-- Screen 01. Not a tab: a mode you enter and leave, hence the back line and
+         the absence of a tab bar at the bottom. -->
+
+    <Grid
+        RowDefinitions="Auto,Auto,*,Auto,Auto"
+        RowSpacing="0">
+
+        <Grid
+            Grid.Row="0"
+            Padding="16,12"
+            ColumnDefinitions="Auto,*,Auto">
+            <Label
+                Grid.Column="0"
+                Style="{StaticResource BarText}"
+                Text="PARD" />
+            <Label
+                Grid.Column="1"
+                Style="{StaticResource BarText}"
+                HorizontalTextAlignment="Center"
+                Text="живой вид" />
+            <Label
+                Grid.Column="2"
+                Style="{StaticResource BarText}"
+                Text="{Binding FirmwareShort}" />
+        </Grid>
+
+        <controls:StatusStrip
+            Grid.Row="1"
+            Caption1="Группа"
+            Caption2="Марка"
+            Caption3="Дистанция"
+            Caption4="Снос"
+            Value1="{Binding GroupLetter}"
+            Value2="{Binding ReticleCaption}"
+            Value3="{Binding DistanceText}"
+            Value4="{Binding DropText}" />
+
+        <!-- .live: the picture. Until the RTSP consumer exists this is the mock-up's
+             field with the scope's own reticle over it, and the note below says so. -->
+        <Border
+            Grid.Row="2"
+            Margin="16,0,16,0"
+            Style="{StaticResource Panel}">
+            <Grid>
+                <BoxView HorizontalOptions="Fill" VerticalOptions="Fill">
+                    <BoxView.Background>
+                        <RadialGradientBrush>
+                            <GradientStop
+                                Offset="0"
+                                Color="#1B2024" />
+                            <GradientStop
+                                Offset="0.62"
+                                Color="#0C0E10" />
+                            <GradientStop
+                                Offset="1"
+                                Color="#050607" />
+                        </RadialGradientBrush>
+                    </BoxView.Background>
+                </BoxView>
+
+                <Image
+                    Source="{Binding ReticlePreview}"
+                    WidthRequest="240"
+                    HeightRequest="180"
+                    Aspect="AspectFit"
+                    Opacity="0.92"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    IsVisible="{Binding ReticlePreview, Converter={StaticResource IsNotNull}}" />
+
+                <Label
+                    Margin="8"
+                    FontFamily="{StaticResource MonoFont}"
+                    FontSize="9.5"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start"
+                    TextColor="{StaticResource Accent}"
+                    Text="{Binding RecordText}" />
+
+                <Label
+                    Margin="8"
+                    FontFamily="{StaticResource MonoFont}"
+                    FontSize="10.5"
+                    LineHeight="1.5"
+                    HorizontalOptions="End"
+                    HorizontalTextAlignment="End"
+                    VerticalOptions="End"
+                    TextColor="{StaticResource OverlayInk}"
+                    Text="{Binding OsdText}" />
+            </Grid>
+        </Border>
+
+        <!-- Back line instead of a tab bar -->
+        <HorizontalStackLayout
+            Grid.Row="3"
+            Padding="16,12">
+            <HorizontalStackLayout.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding BackCommand}" />
+            </HorizontalStackLayout.GestureRecognizers>
+            <Label
+                FontSize="12"
+                TextColor="{StaticResource Ink2}"
+                Text="‹ Девайс · выход из режима" />
+        </HorizontalStackLayout>
+
+        <controls:WriteBar
+            Grid.Row="4"
+            State="{Binding State}" />
+
+    </Grid>
+
+</ContentPage>

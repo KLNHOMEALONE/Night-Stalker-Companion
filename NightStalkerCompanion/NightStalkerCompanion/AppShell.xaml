@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="NightStalkerCompanion.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:NightStalkerCompanion.Views"
+    x:ClassModifier="public"
+    Title="Night Stalker"
+    BackgroundColor="{StaticResource Screen}"
+    TabBarBackgroundColor="{StaticResource Panel}"
+    TabBarTitleColor="{StaticResource Ink}"
+    TabBarUnselectedColor="{StaticResource Ink3}"
+    FlyoutBehavior="Disabled">
+
+    <!-- Two tabs, exactly as the original app has them: «Девайс» and «Галерея».
+         The structure the user memorised is not up for argument; what changes is
+         what is inside them (ui/prototype/index.html, screen 01 notes). -->
+
+    <Tab
+        Title="Девайс"
+        Route="device">
+        <ShellContent
+            ContentTemplate="{DataTemplate views:DevicePage}"
+            Route="main" />
+    </Tab>
+
+    <Tab
+        Title="Галерея"
+        Route="gallery">
+        <ShellContent
+            ContentTemplate="{DataTemplate views:GalleryPage}"
+            Route="media" />
+    </Tab>
+
+</Shell>
