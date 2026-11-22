@@ -1,8 +1,9 @@
 # Night Stalker Companion
 
-An iOS companion app for the **PARD Night Stalker 4K** thermal riflescope, written
-in .NET MAUI (C#, `net10.0-ios`). It talks to the scope over its own Wi-Fi access
-point. Unofficial: this project is not affiliated with and not endorsed by PARD.
+An iOS companion app for the **PARD Night Stalker 4K** digital night vision
+riflescope, written in .NET MAUI (C#, `net10.0-ios`). It talks to the scope over its
+own Wi-Fi access point. Unofficial: this project is not affiliated with and not
+endorsed by PARD.
 
 The interface language is Russian, because that is the language the shooter reads
 at dusk.
