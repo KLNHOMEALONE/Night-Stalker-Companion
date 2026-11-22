@@ -16,6 +16,12 @@ public enum UnitSystem
 /// in both modes, and changing it would silently swap the bullet. Formally BC
 /// belongs to a drag model, so "dimensionless" here is the device's convention,
 /// not physics — say so in the UI rather than explain it away.
+///
+/// Length, speed and distance factors are exact by definition under the 1959
+/// international yard and pound agreement (0.9144 m, 0.45359237 kg). GrPerG is the
+/// odd one out: 1 g is 7000/453.59237 = 15.4323583529... gr, so the literal below is
+/// off by about 9e-9 relative. Invisible at the 0.01 g input step; it would only
+/// matter if a shown value ever had to round trip back bit for bit.
 /// </summary>
 public static class Units
 {
