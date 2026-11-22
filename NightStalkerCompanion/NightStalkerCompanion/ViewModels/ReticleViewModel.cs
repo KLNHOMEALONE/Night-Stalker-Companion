@@ -58,6 +58,30 @@ public partial class ReticleViewModel : ScopePageViewModel
     public int PosX => Edited?.PosX ?? 0;
     public int PosY => Edited?.PosY ?? 0;
 
+    // Поле ввода — черновик: пока экран ничего не записывал, в нём то, что набрал
+    // пользователь; после любой записи (и после «−»/«+», которые пишут сразу) черновик
+    // выбрасывается, и поле снова показывает число из прибора. Иначе экран показывал
+    // бы одно, а прибор держал другое.
+    private string? xInput;
+    private string? yInput;
+
+    /// <summary>
+    /// Смещение X как его видит поле ввода: набираемое значение, а пока ничего не
+    /// набирают — записанное в прицеле.
+    /// </summary>
+    public string XInput
+    {
+        get => xInput ?? OffsetInput.Format(PosX);
+        set => SetProperty(ref xInput, value);
+    }
+
+    /// <summary>Смещение Y, то же самое.</summary>
+    public string YInput
+    {
+        get => yInput ?? OffsetInput.Format(PosY);
+        set => SetProperty(ref yInput, value);
+    }
+
     /// <summary>
     /// Offsets are firmware units. The scale in centimetres per 100 m is unknown to
     /// the firmware, so the screen shows the raw number instead of inventing
@@ -119,6 +143,50 @@ public partial class ReticleViewModel : ScopePageViewModel
         Rebuild();
     }
 
+    /// <summary>
+    /// Записать смещение, набранное в поле, — одним нажатием вместо двухсот «+».
+    /// Пустое или непонятное поле ничего не пишет: прибор остаётся с тем смещением,
+    /// которое на нём уже есть, а поле возвращается к нему же, чтобы не врать.
+    /// </summary>
+    [RelayCommand]
+    private async Task ApplyOffsetAsync(string axis)
+    {
+        if (Edited is not { } r) return;
+
+        bool xAxis = axis == "X";
+        if (!OffsetInput.TryParse(xAxis ? XInput : YInput, out int value))
+        {
+            Rebuild();
+            return;
+        }
+
+        int x = xAxis ? value : r.PosX;
+        int y = xAxis ? r.PosY : value;
+        if (x == r.PosX && y == r.PosY)
+        {
+            Rebuild();
+            return;
+        }
+
+        await State.WriteReticleAsync(targetGroup, r.Style, r.Color, x, y);
+        Rebuild();
+    }
+
+    /// <summary>
+    /// Сменить знак набранного. На цифровой клавиатуре iOS минуса нет, так что
+    /// отрицательное значение нужно уметь получить не только с аппаратной клавиатуры.
+    /// </summary>
+    [RelayCommand]
+    private void FlipOffset(string axis)
+    {
+        bool xAxis = axis == "X";
+        if (OffsetInput.TryParse(xAxis ? XInput : YInput, out int value))
+        {
+            if (xAxis) XInput = OffsetInput.Format(-value);
+            else YInput = OffsetInput.Format(-value);
+        }
+    }
+
     private void Rebuild()
     {
         GroupPicks.Clear();
@@ -145,6 +213,12 @@ public partial class ReticleViewModel : ScopePageViewModel
         OnPropertyChanged(nameof(ColorCaption));
         OnPropertyChanged(nameof(PosX));
         OnPropertyChanged(nameof(PosY));
+
+        // Черновик полей ввода живёт до любой записи: с этого момента поле обязано
+        // показывать число, которое реально держит прибор.
+        xInput = yInput = null;
+        OnPropertyChanged(nameof(XInput));
+        OnPropertyChanged(nameof(YInput));
         OnPropertyChanged(nameof(Readout));
         RaiseDerived();
     }

@@ -147,11 +147,26 @@
                         Grid.Column="0"
                         Style="{StaticResource RowLabel}"
                         Text="Смещение X" />
-                    <Label
+                    <Entry
                         Grid.Column="1"
-                        Style="{StaticResource RowValue}"
-                        Text="{Binding PosX}" />
+                        BackgroundColor="Transparent"
+                        FontFamily="{StaticResource MonoFont}"
+                        FontSize="15"
+                        HorizontalTextAlignment="End"
+                        Keyboard="Numeric"
+                        MaxLength="7"
+                        Text="{Binding XInput, Mode=TwoWay}"
+                        TextColor="{StaticResource Ink}"
+                        VerticalTextAlignment="Center"
+                        WidthRequest="64"
+                        StyleId="X"
+                        Completed="OnOffsetCompleted" />
                     <HorizontalStackLayout Grid.Column="2" Spacing="4">
+                        <Button
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding FlipOffsetCommand}"
+                            CommandParameter="X"
+                            Text="±" />
                         <Button
                             Style="{StaticResource StepperButton}"
                             Command="{Binding NudgeCommand}"
@@ -173,11 +188,26 @@
                         Grid.Column="0"
                         Style="{StaticResource RowLabel}"
                         Text="Смещение Y" />
-                    <Label
+                    <Entry
                         Grid.Column="1"
-                        Style="{StaticResource RowValue}"
-                        Text="{Binding PosY}" />
+                        BackgroundColor="Transparent"
+                        FontFamily="{StaticResource MonoFont}"
+                        FontSize="15"
+                        HorizontalTextAlignment="End"
+                        Keyboard="Numeric"
+                        MaxLength="7"
+                        Text="{Binding YInput, Mode=TwoWay}"
+                        TextColor="{StaticResource Ink}"
+                        VerticalTextAlignment="Center"
+                        WidthRequest="64"
+                        StyleId="Y"
+                        Completed="OnOffsetCompleted" />
                     <HorizontalStackLayout Grid.Column="2" Spacing="4">
+                        <Button
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding FlipOffsetCommand}"
+                            CommandParameter="Y"
+                            Text="±" />
                         <Button
                             Style="{StaticResource StepperButton}"
                             Command="{Binding NudgeCommand}"
