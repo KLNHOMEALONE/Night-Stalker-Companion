@@ -14,14 +14,18 @@
 
     <!-- Two tabs, exactly as the original app has them: «Девайс» and «Галерея».
          The structure the user memorised is not up for argument; what changes is
-         what is inside them (ui/prototype/index.html, screen 01 notes). -->
+         what is inside them (ui/prototype/index.html, screen 01 notes).
+
+         Маршрут ShellContent — это имя экрана, как в эталонном Innowise.Music: тогда
+         на любой экран можно уйти абсолютным «///DevicePage» из любой глубины стека,
+         и возврат на стартовый не зависит от того, сколько экранов поверх него лежит. -->
 
     <Tab
         Title="Девайс"
         Route="device">
         <ShellContent
             ContentTemplate="{DataTemplate views:DevicePage}"
-            Route="main" />
+            Route="DevicePage" />
     </Tab>
 
     <Tab
@@ -29,7 +33,7 @@
         Route="gallery">
         <ShellContent
             ContentTemplate="{DataTemplate views:GalleryPage}"
-            Route="media" />
+            Route="GalleryPage" />
     </Tab>
 
 </Shell>
