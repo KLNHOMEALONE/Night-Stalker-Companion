@@ -75,7 +75,7 @@
                             Margin="0,0,0,8"
                             Padding="5"
                             BackgroundColor="{StaticResource Panel}"
-                            Stroke="{Binding IsCurrent, Converter={StaticResource BoolColor}, ConverterParameter='Line2,Line'}"
+                            Stroke="{Binding IsCurrent, Converter={StaticResource BoolColor}, ConverterParameter='Accent,Line'}"
                             StrokeThickness="1">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="8" />
