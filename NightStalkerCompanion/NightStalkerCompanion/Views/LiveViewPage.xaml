@@ -7,7 +7,6 @@
     xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
     Title="Живой вид"
     x:DataType="vm:LiveViewModel"
-    Shell.NavBarIsVisible="False"
     BackgroundColor="{StaticResource Screen}">
 
     <!-- Screen 01. Not a tab: a mode you enter and leave, hence the back line and
@@ -34,7 +33,7 @@
                 Grid.Column="2"
                 Style="{StaticResource BarText}"
                 Text="{Binding FirmwareShort}" />
-        </Grid>
+                    </Grid>
 
         <controls:StatusStrip
             Grid.Row="1"

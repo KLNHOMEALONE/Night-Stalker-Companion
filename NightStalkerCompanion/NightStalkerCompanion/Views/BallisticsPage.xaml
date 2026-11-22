@@ -8,7 +8,6 @@
     xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
     Title="Баллистика"
     x:DataType="vm:BallisticsViewModel"
-    Shell.NavBarIsVisible="False"
     BackgroundColor="{StaticResource Screen}">
 
     <!-- Screen 03. The original drew an arc indicator next to a stepper and printed
@@ -17,7 +16,7 @@
     <ScrollView>
         <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
 
-            <Grid
+                        <Grid
                 Padding="16,12"
                 ColumnDefinitions="*,Auto">
                 <Label

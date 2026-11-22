@@ -8,7 +8,6 @@
     xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
     Title="Единицы"
     x:DataType="vm:UnitsViewModel"
-    Shell.NavBarIsVisible="False"
     BackgroundColor="{StaticResource Screen}">
 
     <!-- Screen 07: one field changes, the table shows what every number becomes. -->
@@ -16,7 +15,7 @@
     <ScrollView>
         <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
 
-            <Label
+                        <Label
                 Padding="16,12"
                 Style="{StaticResource ScreenTitle}"
                 Text="Единицы" />

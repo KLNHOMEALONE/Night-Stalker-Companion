@@ -7,7 +7,6 @@
     xmlns:vm="clr-namespace:NightStalkerCompanion.ViewModels"
     Title="Марка"
     x:DataType="vm:ReticleViewModel"
-    Shell.NavBarIsVisible="False"
     BackgroundColor="{StaticResource Screen}">
 
     <!-- Screen 02: six real reticle previews and a separate "no reticle". Style 0
@@ -16,7 +15,7 @@
     <ScrollView>
         <VerticalStackLayout Spacing="0" Padding="0,0,0,16">
 
-            <Grid
+                        <Grid
                 Padding="16,12"
                 ColumnDefinitions="*,Auto">
                 <Label

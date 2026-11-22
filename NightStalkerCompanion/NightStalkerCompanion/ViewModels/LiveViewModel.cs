@@ -68,8 +68,8 @@ public partial class LiveViewModel : ScopePageViewModel
     /// </summary>
     public string RecordText => "● REC — состояние записи прибором не читается";
 
-    [RelayCommand]
-    private async Task BackAsync() => await Shell.Current.GoToAsync("../");
+    // «Назад» больше не отсюда: команда живёт в ScopePageViewModel и ведёт себя
+    // одинаково на всех экранах, а не по-своему на каждом.
 
     private void Raise()
     {

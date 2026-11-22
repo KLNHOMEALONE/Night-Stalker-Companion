@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using NightStalkerCompanion.Services;
+using PardApi;
 
 namespace NightStalkerCompanion.ViewModels;
 
@@ -65,6 +67,22 @@ public abstract partial class ScopePageViewModel : ObservableObject
         State.Snapshot.Profile is { } p && (int)p.Number("DistanceUnit").Value != 0
             ? Services.UnitSystem.Imperial
             : Services.UnitSystem.Metric;
+
+    /// <summary>
+    /// «Назад» — на один экран вверх. Работает через <see cref="Routes"/>, а не через
+    /// строку маршрута в разметке: куда именно ведёт кнопка — это решение, и оно
+    /// покрыто тестами, а разметка нет.
+    /// </summary>
+    [RelayCommand]
+    private async Task BackAsync() => await Shell.Current.GoToAsync(Routes.Back);
+
+    /// <summary>
+    /// «Девайс» — на стартовый экран за один тап с любой глубины. Именно для этого
+    /// он абсолютный маршрут на таб, а не <see cref="BackCommand"/> в цикле: сколько
+    /// экранов лежит сверху, экран не знает.
+    /// </summary>
+    [RelayCommand]
+    private async Task GoHomeAsync() => await Shell.Current.GoToAsync(Routes.Home);
 
     protected void RaiseDerived()
     {
