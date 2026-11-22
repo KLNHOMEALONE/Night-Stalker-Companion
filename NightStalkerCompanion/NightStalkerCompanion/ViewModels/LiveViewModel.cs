@@ -45,9 +45,14 @@ public partial class LiveViewModel : ScopePageViewModel
 
     public string DropText => "—";
 
-    /// <summary>Asset of the reticle the scope is showing, null when it shows none.</summary>
+    /// <summary>
+    /// The mark the scope is showing, as drawn. Not the magnified preview of the
+    /// choice tiles: this picture claims to be what comes through the eyepiece, so
+    /// it has to be the real proportions of the reticle, not a close-up of its hub.
+    /// Null when the scope shows no reticle at all.
+    /// </summary>
     public string? ReticlePreview => State.Snapshot.Reticle?.PreviewStyle is int s
-        ? ReticleInfo.PreviewAsset(s)
+        ? ReticleInfo.FullAsset(s)
         : null;
 
     /// <summary>Environment line under the picture, from the profile.</summary>

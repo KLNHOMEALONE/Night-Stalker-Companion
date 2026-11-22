@@ -16,9 +16,22 @@ public static class ReticleInfo
 
     public const int MaxStyle = 6;
 
-    /// <summary>Preview asset name for a style. Style 0 has no preview by definition.</summary>
+    /// <summary>
+    /// Preview asset for the choice tiles: the crosshair magnified, because in an
+    /// 84×84 tile the whole canvas shrinks to 0.44× and a one-pixel hairline stops
+    /// existing. Tiles only — see <see cref="FullAsset"/> for anywhere the mark has
+    /// to look like the mark.
+    /// </summary>
     public static string? PreviewAsset(int style)
         => style is > OffStyle and <= MaxStyle ? $"ret{style}.png" : null;
+
+    /// <summary>
+    /// The mark as drawn: nothing cropped, nothing enlarged. Live view shows the
+    /// scope's picture with this over it, and there a magnified crop would lie about
+    /// what the shooter sees through the eyepiece.
+    /// </summary>
+    public static string? FullAsset(int style)
+        => style is > OffStyle and <= MaxStyle ? $"ret{style}_full.png" : null;
 
     /// <summary>
     /// Only two values have ever been seen on the device: 1 and 0. The captions
