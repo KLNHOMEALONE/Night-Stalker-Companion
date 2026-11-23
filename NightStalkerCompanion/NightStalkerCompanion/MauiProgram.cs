@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using NightStalkerCompanion.Services;
 using NightStalkerCompanion.ViewModels;
 using NightStalkerCompanion.Views;
+using PardApi;
 
 namespace NightStalkerCompanion;
 
@@ -25,7 +26,7 @@ public static class MauiProgram
 
         // The scope client is a singleton: it owns one HttpClient, and the device
         // does not like a new connection per screen.
-        builder.Services.AddSingleton<IPardService>(_ => new PardService());
+        builder.Services.AddSingleton<IPardService>(_ => new PardService(ScopeHost));
 
         // One shared device state for every screen — see the comment on AppState.
         builder.Services.AddSingleton<AppState>();
@@ -66,5 +67,31 @@ public static class MauiProgram
 #endif
 
         return builder.Build();
+    }
+
+    /// <summary>
+    /// Where the scope lives: 192.168.1.254, the access point the scope creates itself.
+    ///
+    /// A debug build may be pointed elsewhere by a launch argument, which is how the app runs
+    /// against tools/mock_scope.py on a simulator — the only way the write paths can be watched
+    /// at all without holding the scope in the hand:
+    ///
+    ///     xcrun simctl launch <device> com.companyname.nightstalkercompanion \
+    ///         --args -PardHost 127.0.0.1:8080
+    ///
+    /// Debug only on purpose. A shipped build has one address it is allowed to talk to, and the
+    /// fault line prints that address, so a wrong host is never silent.
+    /// </summary>
+    private static string ScopeHost
+    {
+#if DEBUG
+        get
+        {
+            string? named = Foundation.NSUserDefaults.StandardUserDefaults.StringForKey("PardHost");
+            return string.IsNullOrWhiteSpace(named) ? PardClient.DefaultHost : named;
+        }
+#else
+        get => PardClient.DefaultHost;
+#endif
     }
 }

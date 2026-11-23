@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 
@@ -138,17 +139,34 @@ public sealed class PardClient : IDisposable
                 $"(0 = {nameof(Reticle.OffStyle)}, марка выключена); " +
                 "если он точно верный, пишите с validateStyle: false");
 
-        var changes = before.ChangesTo(target);
-        if (changes.Count == 0) return before;
+        // Nothing differs, so nothing is written: a 6001 is never free on this device — it can
+        // move the active group — so an empty change is not worth the risk.
+        if (before.ChangesTo(target).Count == 0) return before;
+
+        // The whole reticle, always: GroupId, Style, Color, PosX, PosY — not a diff of what
+        // changed. Measured: a 6001 carrying only the one changed field is answered with
+        // <Status>0</Status> and stores nothing (group B was asked for a new style and read the
+        // old one back on the same group), and the stock app was seen sending the fields together.
+        // GroupId rides along because it is what selects the group — the walk measured that writing
+        // GroupId=N makes 6009 answer with group N's reticle. par stays 0, the value the stock app
+        // sends: selecting by par was measured false for reads and is not assumed here.
+        var request = new Dictionary<string, string>
+        {
+            ["GroupId"] = target.GroupId.ToString(CultureInfo.InvariantCulture),
+            ["Style"] = target.Style.ToString(CultureInfo.InvariantCulture),
+            ["Color"] = target.Color.ToString(CultureInfo.InvariantCulture),
+            ["PosX"] = target.PosX.ToString(CultureInfo.InvariantCulture),
+            ["PosY"] = target.PosY.ToString(CultureInfo.InvariantCulture),
+        };
 
         var q = "custom=1&cmd=6001&par=0&" + string.Join("&",
-            changes.Select(kv => $"{kv.Key}={kv.Value}"));
+            request.Select(kv => $"{kv.Key}={kv.Value}"));
         var reply = await GetAsync(q, ct).ConfigureAwait(false);
         if (!reply.HasEnvelope)
             throw new InvalidOperationException($"нет конверта в ответе на запись марки: {reply.Body}");
 
         var after = await ReadReticleAsync(ct).ConfigureAwait(false);
-        foreach (var kv in changes)
+        foreach (var kv in request)
         {
             var got = kv.Key switch
             {
