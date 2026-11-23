@@ -89,6 +89,24 @@
 
     <Style x:Key="RowValue" BasedOn="{StaticResource MonoValue}" TargetType="Label" />
 
+    <!-- A value the user can write. Same monospaced number as a read-only row, in a field the
+         keyboard can type it with: no border, no fill, no second visual weight on a screen that
+         is already a list of numbers. What the field accepts is not here — that is the field's
+         type, which the row knows and this style does not. -->
+    <Style x:Key="RowValueField" TargetType="Entry">
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{StaticResource Ink}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource Ink3}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="WidthRequest" Value="96" />
+        <Setter Property="HeightRequest" Value="28" />
+        <Setter Property="ClearButtonVisibility" Value="Never" />
+        <Setter Property="ReturnType" Value="Done" />
+    </Style>
+
     <Style x:Key="RowValueMuted" TargetType="Label">
         <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
         <Setter Property="FontSize" Value="15" />

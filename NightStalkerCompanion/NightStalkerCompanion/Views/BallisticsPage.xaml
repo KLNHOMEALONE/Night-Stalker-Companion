@@ -36,13 +36,22 @@
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="vm:FieldRow">
                         <Grid
-                            ColumnDefinitions="*,Auto,Auto"
+                            ColumnDefinitions="*,Auto,Auto,Auto"
                             ColumnSpacing="8"
                             Padding="0,11">
                             <Label
                                 Grid.Column="0"
                                 Style="{StaticResource RowLabel}"
-                                Text="{Binding Label}" />
+                                Text="{Binding Label}">
+                                <!-- The one row of this screen that leads somewhere else. The tap is
+                                     on the caption and not on the row: a gesture over the row would
+                                     be laid over the fields the user is typing into. -->
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BallisticsViewModel}}, Path=OpenRowCommand}"
+                                        CommandParameter="{Binding Field}" />
+                                </Label.GestureRecognizers>
+                            </Label>
 
                             <HorizontalStackLayout
                                 Grid.Column="1"
@@ -51,12 +60,12 @@
                                 <Button
                                     Style="{StaticResource StepperButton}"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BallisticsViewModel}}, Path=StepCommand}"
-                                    CommandParameter="{Binding Field, StringFormat='{0}:-1'}"
+                                    CommandParameter="{Binding StepPrefix, StringFormat='{0}-1'}"
                                     Text="−" />
                                 <Button
                                     Style="{StaticResource StepperButton}"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:BallisticsViewModel}}, Path=StepCommand}"
-                                    CommandParameter="{Binding Field, StringFormat='{0}:+1'}"
+                                    CommandParameter="{Binding StepPrefix, StringFormat='{0}+1'}"
                                     Text="+" />
                             </HorizontalStackLayout>
 
@@ -64,16 +73,37 @@
                                 Grid.Column="2"
                                 Spacing="0"
                                 HorizontalOptions="End">
+                                <!-- A writable number is typed, not only stepped: eight hundred taps
+                                     of «+» is not a way in. Every keystroke is checked against the
+                                     type of the field, and what is written is committed in the
+                                     code-behind, the same way the offset fields on the mark screen
+                                     do it. -->
+                                <Entry
+                                    Style="{StaticResource RowValueField}"
+                                    IsVisible="{Binding Writable}"
+                                    Keyboard="Numeric"
+                                    MaxLength="{Binding MaxLength}"
+                                    Text="{Binding Text, Mode=TwoWay}"
+                                    IsReadOnly="{Binding Source={RelativeSource AncestorType={x:Type vm:BallisticsViewModel}}, Path=IsBusy}"
+                                    Loaded="OnFieldRealised"
+                                    Completed="OnFieldValueCommitted"
+                                    Unfocused="OnFieldValueCommitted" />
                                 <Label
                                     Style="{StaticResource RowValue}"
                                     FontSize="16"
-                                    Text="{Binding Value}" />
+                                    IsVisible="{Binding Writable, Converter={StaticResource InvertBool}}"
+                                    Text="{Binding Text}" />
                                 <Label
                                     Style="{StaticResource Unit}"
                                     HorizontalTextAlignment="End"
                                     Text="{Binding Unit}"
                                     IsVisible="{Binding HasUnit}" />
                             </VerticalStackLayout>
+
+                            <Label
+                                Grid.Column="3"
+                                Style="{StaticResource RowAction}"
+                                Text="{Binding Action}" />
                         </Grid>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
