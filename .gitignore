@@ -1,11 +1,32 @@
 # Everything at this level is ignored by default, and only the application is
 # tracked. This is a deliberate allow-list, not an ignore-list: the same directory
-# holds firmware images, Ghidra projects, packet captures, a JDK and the reverse
-# engineering notes, and any future folder added here must be allowed on purpose
-# rather than remembered by whoever writes the next rule.
+# holds firmware images, Ghidra projects, packet captures and a JDK, and any
+# future folder added here must be allowed on purpose rather than remembered by
+# whoever writes the next rule.
 /*
 !/.gitignore
 !/NightStalkerCompanion/
+!/notes/
+
+# Inside notes/ the same rule applies one level down. The protocol documentation
+# is tracked; the working notes are not. Half of that directory is session scratch
+# that quotes a device UDID and a home directory, so `git add notes/` must not be
+# able to pick them up: a note joins the repository by being named here.
+/notes/*
+!/notes/PROTOCOL.md
+!/notes/CMD_TABLE.md
+!/notes/FIRMWARE.md
+!/notes/APP_FIELDS.md
+!/notes/CONNECTIVITY.md
+!/notes/RE_FINDINGS.md
+!/notes/MAUI_PORT.md
+!/notes/DEVICE_DEPLOY.md
+!/notes/WINDOW_RUNBOOK.md
+# HANDOFF.md is session notes by nature, but five code comments cite it as the
+# source of the read-back lag and of what is still uncaptured; a comment that
+# points at an ignored file is a dead link. It stays until those citations move
+# into the durable documents.
+!/notes/HANDOFF.md
 
 # Build output and IDE state
 [Bb]in/

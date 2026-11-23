@@ -73,7 +73,13 @@ NightStalkerCompanion/
   ViewModels/            MVVM view models, one shared AppState
   Views/                 one page per screen of the design
   Controls/              status bar, write verdict bar, state notes
+../notes/                what the device was measured to do (see below)
 ```
 
-Protocol documentation and reverse-engineering notes are deliberately **not** in
-this repository.
+The protocol documentation lives in `notes/`, one level above this directory:
+`PROTOCOL.md` for the transport, `CMD_TABLE.md` for what each command actually
+does, `APP_FIELDS.md` for what each field means and which of them mislead, and
+`FIRMWARE.md` for what the binary says. Every claim there was checked against a
+real device rather than a datasheet, and where something is unknown the file says
+so instead of guessing. Session scratch, firmware images, Ghidra projects and
+packet captures stay out of the repository by rule, in `.gitignore`.
