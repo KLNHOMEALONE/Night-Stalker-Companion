@@ -47,10 +47,18 @@ Requires the .NET 10 SDK with the `maui` workload, and Xcode.
 
 ```bash
 export DOTNET_ROOT=$HOME/.dotnet
+export PATH="$HOME/.dotnet:$PATH"
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 
 dotnet build -f net10.0-ios -r iossimulator-arm64   # simulator
+dotnet test NightStalkerCompanion/PardApi.Tests     # protocol and routing tests
 ```
+
+`PATH` is not optional. This machine also carries an older SDK at
+`/usr/local/share/dotnet`, first in `PATH`, and it refuses `net10.0` with a
+misleading `NETSDK1045` that names someone else's project; `DOTNET_ROOT` alone
+does not move the CLI. `global.json` pins the SDK so the old one says plainly
+that it cannot build this, instead of starting a build it cannot finish.
 
 The scope answers plain HTTP on `192.168.1.254`, so the iOS build carries an App
 Transport Security exception (`Platforms/iOS/Info.plist`).
@@ -59,6 +67,7 @@ Transport Security exception (`Platforms/iOS/Info.plist`).
 
 ```
 PardApi/                 protocol client: profile, reticle, read-back semantics
+PardApi.Tests/           tests for the client, no device needed
 NightStalkerCompanion/
   Services/              the only place that talks to the device
   ViewModels/            MVVM view models, one shared AppState
