@@ -44,6 +44,41 @@ public static class OffsetInput
     }
 
     /// <summary>
+    /// Whether the field may hold <paramref name="text"/> while the user is still typing it.
+    ///
+    /// <see cref="TryParse"/> answers a different question — may this be written to the scope —
+    /// and applying it to half-typed text would make the field impossible to type in: the minus
+    /// arrives before its digits, and so does «1» before «12». This is the widest text that can
+    /// still become an offset, and everything else never reaches the field at all: a separator,
+    /// a letter, a pasted «1.5», a Y the sight cannot hold. Refusing it on Enter is too late for
+    /// the last two — the number is already on screen, looking like an offset.
+    /// </summary>
+    public static bool IsDraft(string? text, bool xAxis)
+    {
+        if (string.IsNullOrEmpty(text))
+            return true;                                      // typing starts from nothing
+
+        int digitsStart = text[0] == '-' ? 1 : 0;
+        if (digitsStart == text.Length)
+            return true;                                      // the sign arrives first
+
+        for (int i = digitsStart; i < text.Length; i++)
+            if (text[i] < '0' || text[i] > '9')
+                return false;
+
+        // Still shape only, plus the one value rule that holds mid-typing: a complete number
+        // past the scope's limit is refused now rather than at Enter, so that the field can
+        // never show a Y the device would not take. A number too long for an int is refused
+        // the same way — it fits no offset on either axis.
+        if (!int.TryParse(text[digitsStart..],
+                System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out int magnitude))
+            return false;
+
+        return OffsetLimits.Within(xAxis, text[0] == '-' ? -magnitude : magnitude);
+    }
+
+    /// <summary>
     /// How a stored offset looks in the field. An ASCII minus, the same character the
     /// parser accepts, so what the screen prefills it can read back.
     /// </summary>

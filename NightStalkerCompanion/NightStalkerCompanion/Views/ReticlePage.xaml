@@ -151,6 +151,7 @@
                          enforces, so the field is only kept out of absurd lengths. Do not
                          turn it into a range check. -->
                     <Entry
+                        x:Name="XOffsetEntry"
                         Grid.Column="1"
                         BackgroundColor="Transparent"
                         FontFamily="{StaticResource MonoFont}"
@@ -192,6 +193,7 @@
                         Style="{StaticResource RowLabel}"
                         Text="Смещение Y" />
                     <Entry
+                        x:Name="YOffsetEntry"
                         Grid.Column="1"
                         BackgroundColor="Transparent"
                         FontFamily="{StaticResource MonoFont}"

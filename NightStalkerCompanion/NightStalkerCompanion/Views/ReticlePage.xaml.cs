@@ -1,3 +1,4 @@
+using NightStalkerCompanion.Controls;
 using NightStalkerCompanion.ViewModels;
 
 namespace NightStalkerCompanion.Views;
@@ -11,6 +12,12 @@ public partial class ReticlePage : ContentPage
         this.viewModel = viewModel;
         BindingContext = viewModel;
         InitializeComponent();
+
+        // Attached here rather than in the XAML: declaring a behaviour as an <Entry.Behaviors>
+        // child makes the XAML source generator fail the whole page with MAUIG1001. Which axis a
+        // field edits is the one thing the rule needs, so it is passed in by hand.
+        XOffsetEntry.Behaviors.Add(new OffsetEntryBehavior { Axis = "X" });
+        YOffsetEntry.Behaviors.Add(new OffsetEntryBehavior { Axis = "Y" });
     }
 
     protected override void OnAppearing()
