@@ -45,10 +45,17 @@ public partial class ReticleViewModel : ScopePageViewModel
         }
     }
 
-    /// <summary>The reticle the screen edits: only ever the active group's.</summary>
-    public Reticle? Edited => IsOnTarget ? State.Snapshot.Reticle : null;
+    /// <summary>
+    /// The reticle this screen edits: this group's, recognised by the GroupId the scope put in
+    /// the answer. Not “the active group's reticle”: a style write switches the active group, and
+    /// pairing the reticle with whatever BallisticData says afterwards left the screen holding
+    /// nothing — the highlighted tile went blank and the tapped one never lit, because the screen
+    /// had decided it was no longer looking at this group.
+    /// </summary>
+    public Reticle? Edited => State.Snapshot.ReticleOf(targetGroup);
 
-    public bool IsOnTarget => State.ActiveGroupIndex == targetGroup;
+    /// <summary>Whether this group's reticle is known at all — the tiles and steppers need it.</summary>
+    public bool IsOnTarget => Edited is not null;
 
     public string GroupCaption =>
         PardApi.Groups.TryFromIndex(targetGroup, out var g) ? $"группа {g.Name()}" : "группа ?";

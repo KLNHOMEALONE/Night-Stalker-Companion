@@ -113,13 +113,14 @@
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
 
-            <!-- Until the walk has run, the other four groups are unknown, and the
-                 honest thing is to say so and offer the command that reads them. -->
+            <!-- While any group's reticle is unknown, say so and name the command that reads them.
+                 The command is the button on this screen, not another screen: reading a group means
+                 selecting it, which is a write the write bar has to report. -->
             <Label
                 IsVisible="{Binding GroupsRead, Converter={StaticResource InvertBool}}"
                 Style="{StaticResource Note}"
                 Padding="16,4,16,8"
-                Text="Марки групп B…E ещё не читаны: чтобы их увидеть, нужно выбрать каждую группу записью. Команда — на экране «Группы A–E»." />
+                Text="Марки прочитаны не все группы: чтобы увидеть группу, её нужно выбрать записью. Кнопка «Прочитать марки A–E» ниже; прочитанное при посещении группы появляется само." />
 
             <Label
                 Padding="16,16,16,8"
@@ -169,11 +170,16 @@
                         Style="{StaticResource GhostButton}"
                         Command="{Binding OpenBallisticsCommand}"
                         Text="Баллистика" />
+                    <!-- Not a link to a groups screen: screen 04 of the design is not built, and a
+                         button that navigates nowhere reads as a broken app. This is the read of
+                         all five groups — the only thing that fills the rows above, and it is an
+                         action because obtaining a group's reticle means selecting that group, so
+                         the device is written to and the write bar has to say so. -->
                     <Button
                         Grid.Column="1"
                         Style="{StaticResource GhostButton}"
-                        Command="{Binding OpenGroupsCommand}"
-                        Text="Группы A–E" />
+                        Command="{Binding State.ReadGroupsCommand}"
+                        Text="Прочитать марки A–E" />
                 </Grid>
             </controls:WriteBar>
 

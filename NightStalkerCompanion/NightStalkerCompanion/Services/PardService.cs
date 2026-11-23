@@ -87,6 +87,15 @@ public sealed class PardService : IPardService, IDisposable
         if (errors.Count > 0)
             source += " · нет: " + string.Join(", ", errors.Select(e => e.Split(':')[0]));
 
+        // Every poll files the row it just read. 6009 names its own group in the reply — GroupId
+        // is the group index, the same counter as BallisticData (notes/APP_FIELDS.md, «ГДЕ ГРУППА») —
+        // so a group stops being unknown the moment it has been looked at once. Before this, the
+        // table came only from the explicit A…E walk, and the group list forgot a group as soon as
+        // it stopped being active: select B, and A's numbers went blank although the app had read
+        // them a minute ago.
+        if (reticle is not null)
+            GroupCache = GroupReticleTable.Remember(GroupCache, reticle);
+
         return new SightingSnapshot
         {
             IsLive = true,
@@ -100,8 +109,9 @@ public sealed class PardService : IPardService, IDisposable
     }
 
     /// <summary>
-    /// Reticles of the five groups survive between polls: they cost a write per
-    /// group to obtain, and they do not change on their own.
+    /// Reticles of the groups seen so far, one row per group. They do not change on their own,
+    /// so they survive between polls: an ordinary poll adds the group it read, and the walk of
+    /// A…E adds all five. Null means nobody has read one yet.
     /// </summary>
     private IReadOnlyDictionary<int, Reticle>? GroupCache { get; set; }
 
@@ -129,7 +139,11 @@ public sealed class PardService : IPardService, IDisposable
             for (int g = 0; g < Groups.Count; g++)
             {
                 await SelectGroupCoreAsync(g, ct).ConfigureAwait(false);
-                found[g] = await Client.ReadReticleAsync(ct).ConfigureAwait(false);
+                var read = await Client.ReadReticleAsync(ct).ConfigureAwait(false);
+                found[g] = read;
+                // Filed as it is read: a walk that dies part way has still reported the groups it
+                // reached, and dropping those is another way of blanking a row.
+                GroupCache = GroupReticleTable.Remember(GroupCache, read);
             }
         }
         finally
@@ -141,7 +155,6 @@ public sealed class PardService : IPardService, IDisposable
             }
         }
 
-        GroupCache = found;
         return found;
     }
 

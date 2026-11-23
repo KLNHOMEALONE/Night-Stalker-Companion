@@ -63,6 +63,40 @@ that it cannot build this, instead of starting a build it cannot finish.
 The scope answers plain HTTP on `192.168.1.254`, so the iOS build carries an App
 Transport Security exception (`Platforms/iOS/Info.plist`).
 
+## Checking it without holding the scope
+
+Most of what this app does is a write followed by a read-back, and the honest version of
+that cannot be tested against a saved snapshot: nothing is written, so nothing changes.
+`tools/mock_scope.py` is a stand-in for the device — the five polled commands and the two
+written ones, with the semantics recorded in `../notes/APP_FIELDS.md`: `6009` answers for
+one group and names it in `GroupId`, `GroupId` is the group index, `par=` is not, and
+writing `BallisticData` switches the active group.
+
+```bash
+python3 tools/mock_scope.py --port 8080 &   # a fresh one: the scenario reads and writes for real
+dotnet run --project tools/ScopeScenario -- http://127.0.0.1:8080
+```
+
+`tools/ScopeScenario` walks the sequence a user walks — read A, select B, read, write a
+reticle, read — and fails when a group is forgotten on the way. It links the app's own
+service files rather than copying them, so what it checks is what ships.
+
+A debug build of the app can be pointed at the same server, which is the only way to watch
+a screen react to the device:
+
+```bash
+xcrun simctl launch <device> com.companyname.nightstalkercompanion \
+    --args -PardHost 127.0.0.1:8080
+```
+
+Release builds ignore the argument and talk to `192.168.1.254` only.
+
+One rule runs through all of this, and it is why every check above asks for a group by
+index: five groups may hold the same reticle style and the same ballistic profile, and they
+may hold different ones. Values identify nothing. A reticle belongs to whichever group its
+own reply names in `GroupId`, a profile to whichever group `BallisticData` names, and nothing
+else in the app is allowed to guess.
+
 ## Layout
 
 ```

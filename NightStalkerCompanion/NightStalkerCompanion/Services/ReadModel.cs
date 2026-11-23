@@ -46,6 +46,21 @@ public sealed record SightingSnapshot
         SourceLabel = "прибор не опрошен",
     };
 
+    /// <summary>
+    /// The reticle of one specific group, or null when the app does not know it.
+    ///
+    /// Never pair <see cref="Reticle"/> with a group from <see cref="ActiveGroupIndex"/> by hand:
+    /// the two are read by different commands, 6019 and 6009, read in parallel, and any write
+    /// switches the active group — so after a tap on a style they can describe two different
+    /// groups. Groups may also share a style, so the reticle cannot be recognised by its numbers
+    /// either. The reticle names its own group in GroupId (notes/APP_FIELDS.md, «ГДЕ ГРУППА»), and
+    /// that is what this asks.
+    /// </summary>
+    public Reticle? ReticleOf(int group)
+        => GroupReticles is { } table && table.TryGetValue(group, out var known)
+            ? known
+            : Reticle is { } live && live.GroupId == group ? live : null;
+
     /// <summary>Active group index taken from BallisticData; null when there is no profile.</summary>
     public int? ActiveGroupIndex => Profile is null ? null : (int)Profile.Number("BallisticData").Value;
 

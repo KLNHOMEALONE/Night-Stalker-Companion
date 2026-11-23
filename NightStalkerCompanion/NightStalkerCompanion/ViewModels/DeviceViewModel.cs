@@ -33,7 +33,11 @@ public partial class DeviceViewModel : ScopePageViewModel
     {
         get
         {
-            var r = State.Snapshot.Reticle;
+            // The active group's reticle, by the group the reticle itself names. The two come
+            // from different commands and a write moves the active group between them, so asking
+            // “what is active” and reading “the last reticle” would sometimes print one group's
+            // reticle next to another group's letter.
+            var r = State.Snapshot.ReticleOf(State.ActiveGroupIndex ?? -1);
             if (r is null) return "—";
             return r.IsEnabled ? $"Стиль {r.Style}" : "марки нет";
         }
@@ -66,11 +70,13 @@ public partial class DeviceViewModel : ScopePageViewModel
     }
 
     /// <summary>
-    /// True until the group walk has been run. Reading the other four groups costs
-    /// a write each, so it is an explicit command on the groups screen, and until
-    /// then the list has to say "not read" instead of repeating the active group.
+    /// True when the reticle of every group is known. Reading one costs a write that selects
+    /// that group, so it stays an explicit command, and while some group is unknown the list has
+    /// to say so — a “—” next to a letter is a question nobody asked yet, not an empty group.
+    /// Groups may share a style and a profile, so knowing three of them says nothing about the
+    /// other two: this counts the groups, not the distinct styles.
     /// </summary>
-    public bool GroupsRead => State.Snapshot.GroupReticles is { Count: > 0 };
+    public bool GroupsRead => PardApi.Groups.All.All(g => State.Snapshot.ReticleOf(g.Par()) is not null);
 
     [RelayCommand]
     private async Task OpenLiveAsync() => await Shell.Current.GoToAsync("live");
@@ -78,25 +84,26 @@ public partial class DeviceViewModel : ScopePageViewModel
     [RelayCommand]
     private async Task OpenBallisticsAsync() => await Shell.Current.GoToAsync("ballistics");
 
-    [RelayCommand]
-    private async Task OpenGroupsAsync() => await Shell.Current.GoToAsync("groups");
-
     /// <summary>Open the reticle screen aimed at one group.</summary>
     [RelayCommand]
     private async Task OpenGroupAsync(int index)
-        => await Shell.Current.GoToAsync($"reticle?group={index}");
+        => await Shell.Current.GoToAsync(Routes.Reticle(index));
 
     private void Rebuild()
     {
         GroupRows.Clear();
-        var reticles = State.Snapshot.GroupReticles;
 
         for (int i = 0; i < PardApi.Groups.Count; i++)
         {
             string letter = PardApi.Groups.All[i].Name();
             bool active = State.ActiveGroupIndex == i;
 
-            if (reticles is not null && reticles.TryGetValue(i, out var r))
+            // Ask for this group's reticle rather than using the last one read: five groups can
+            // hold the same style and the same profile, so nothing but the group the scope named
+            // tells their rows apart. A group whose reticle was never read says so (“—”), which
+            // is also what it says when the shooter leaves for another group — it has not lost
+            // the numbers, it never had them.
+            if (State.Snapshot.ReticleOf(i) is { } r)
             {
                 GroupRows.Add(new GroupLine(
                     i,
@@ -108,11 +115,7 @@ public partial class DeviceViewModel : ScopePageViewModel
             }
             else
             {
-                GroupRows.Add(active && State.Snapshot.Reticle is { } live
-                    ? new GroupLine(i, letter,
-                        ReticleInfo.Describe(live.Style, live.Color, live.PosX, live.PosY),
-                        "активная", true, live.PreviewStyle)
-                    : GroupLine.Empty(i, letter));
+                GroupRows.Add(GroupLine.Empty(i, letter));
             }
         }
 
