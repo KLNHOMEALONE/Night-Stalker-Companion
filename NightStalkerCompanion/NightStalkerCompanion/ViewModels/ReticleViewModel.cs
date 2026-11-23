@@ -89,7 +89,39 @@ public partial class ReticleViewModel : ScopePageViewModel
     /// </summary>
     public string OffsetTag =>
         "Смещение задаётся в единицах прошивки и пока не откалибровано в сантиметры "
-        + "на 100 м: масштаб в прошивке неизвестен, поэтому показываем как есть.";
+        + "на 100 м: масштаб в прошивке неизвестен, поэтому показываем как есть. "
+        + $"Y при этом держится в пределах ±{OffsetLimits.YLimit}, у X предела нет — "
+        + "сколько прицел примет, столько он и держит.";
+
+    private string? offsetRefusal;
+
+    /// <summary>
+    /// Почему последняя попытка записать смещение не удалась. Пусто, когда отказывать
+    /// нечего. Это не вердикт записи и живёт он не по её правилам: карточка остаётся на
+    /// экране после <see cref="Rebuild"/>, чтобы человек успел её прочитать, и гаснет
+    /// сама, когда следующая попытка пройдёт.
+    /// </summary>
+    public string? OffsetRefusal
+    {
+        get => offsetRefusal;
+        private set
+        {
+            if (SetProperty(ref offsetRefusal, value))
+                OnPropertyChanged(nameof(HasOffsetRefusal));
+        }
+    }
+
+    public bool HasOffsetRefusal => !string.IsNullOrEmpty(offsetRefusal);
+
+    /// <summary>
+    /// Отказ один на два пути ввода — поле и степперы: придел у прибора один, и с какой
+    /// стороны к нему не подошли, вранья быть не должно.
+    /// </summary>
+    private static string Refusal(string axisName, bool fromField) =>
+        $"Смещение {axisName} вне предела ±{OffsetLimits.YLimit}: прицел такой величины не держит. "
+        + (fromField
+            ? "Ничего не записано, поле снова показывает то, что держит прибор."
+            : "Дальше степпер не идёт, ничего не записано.");
 
     public string Readout => Edited is { } r
         ? $"стиль {r.Style} · {ReticleInfo.ColorLabel(r.Color)} · X {r.PosX} · Y {r.PosY}"
@@ -137,9 +169,23 @@ public partial class ReticleViewModel : ScopePageViewModel
         // "X:+1" and "Y:-1" arrive as one parameter; the axis decides which offset moves.
         string[] parts = axis.Split(':');
         if (parts.Length != 2) return;
-        int dx = parts[0] == "X" ? int.Parse(parts[1]) : 0;
-        int dy = parts[0] == "Y" ? int.Parse(parts[1]) : 0;
-        await State.WriteReticleAsync(targetGroup, r.Style, r.Color, r.PosX + dx, r.PosY + dy);
+        bool xAxis = parts[0] == "X";
+        int delta = int.Parse(parts[1]);
+        int moved = (xAxis ? r.PosX : r.PosY) + delta;
+
+        // Без этого шага степпер уходил бы за тот же предел, который отказывает полю:
+        // восемьдесят нажатий «+» от нуля доводят Y до величины, которой прицел не держит,
+        // и притом дорогой, которую стена закрывать и должна.
+        if (!OffsetLimits.Within(xAxis, moved))
+        {
+            OffsetRefusal = Refusal(xAxis ? "X" : "Y", fromField: false);
+            return;
+        }
+
+        OffsetRefusal = null;
+        int x = xAxis ? r.PosX + delta : r.PosX;
+        int y = xAxis ? r.PosY : r.PosY + delta;
+        await State.WriteReticleAsync(targetGroup, r.Style, r.Color, x, y);
         Rebuild();
     }
 
@@ -154,8 +200,20 @@ public partial class ReticleViewModel : ScopePageViewModel
         if (Edited is not { } r) return;
 
         bool xAxis = axis == "X";
+        OffsetRefusal = null;
         if (!OffsetInput.TryParse(xAxis ? XInput : YInput, out int value))
         {
+            Rebuild();
+            return;
+        }
+
+        // Черновик выбрасывается и здесь: число, которого прицел не держит, не должно
+        // оставаться в поле, потому что следующий «Enter» записал бы его же. От кривого
+        // ввода этот случай отличается тем, что причину надо назвать: прибор значение не
+        // отверг, это мы его не пускаем, и молча вернуть старое число было бы обидно.
+        if (!OffsetLimits.Within(xAxis, value))
+        {
+            OffsetRefusal = Refusal(xAxis ? "X" : "Y", fromField: true);
             Rebuild();
             return;
         }

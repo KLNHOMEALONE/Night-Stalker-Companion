@@ -147,6 +147,9 @@
                         Grid.Column="0"
                         Style="{StaticResource RowLabel}"
                         Text="Смещение X" />
+                    <!-- MaxLength here is a typing limit, not the sight's: X has no limit it
+                         enforces, so the field is only kept out of absurd lengths. Do not
+                         turn it into a range check. -->
                     <Entry
                         Grid.Column="1"
                         BackgroundColor="Transparent"
@@ -221,6 +224,12 @@
                     </HorizontalStackLayout>
                 </Grid>
             </VerticalStackLayout>
+
+            <controls:AlertCard
+                IsVisible="{Binding HasOffsetRefusal}"
+                Warning="True"
+                Margin="16,12,16,0"
+                Text="{Binding OffsetRefusal}" />
 
             <controls:AlertCard
                 Margin="16,12,16,8"
