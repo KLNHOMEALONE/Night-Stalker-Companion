@@ -5,20 +5,20 @@ using System.Text.RegularExpressions;
 namespace PardApi;
 
 /// <summary>
-/// Профиль баллистического калькулятора, который прицел отдаёт командой
-/// <c>GET /?custom=1&amp;cmd=6019</c> в теле <c>&lt;String&gt;{...}&lt;/String&gt;</c>.
-/// Полей ровно двенадцать, имена берём у самого прибора и не выдумываем своих.
+/// The ballistic calculator profile the scope answers with
+/// <c>GET /?custom=1&amp;cmd=6019</c> in a <c>&lt;String&gt;{...}&lt;/String&gt;</c> body.
+/// There are exactly twelve fields, named as the device names them; we invent none.
 /// </summary>
 public sealed class BallisticProfile
 {
-    /// <summary>Порядок полей тот, что отдаёт прицел. Порядок важен при выводе.</summary>
+    /// <summary>Field order is the one the scope answers in. The order matters when shown.</summary>
     public static readonly string[] FieldOrder =
     {
         "DistanceSwitch", "DistanceUnit", "BallisticData", "Velocity", "BulletWt",
         "BulletBC", "Altitude", "Temperature", "ScopeHt", "ZeroRange", "Sharp", "Color"
     };
 
-    /// <summary>Сырые строковые значения, как их прислал прицел, без интерпретаций.</summary>
+    /// <summary>Raw string values, exactly as the scope sent them, uninterpreted.</summary>
     public IReadOnlyDictionary<string, string> Raw { get; }
 
     private BallisticProfile(IReadOnlyDictionary<string, string> raw) => Raw = raw;
@@ -32,11 +32,11 @@ public sealed class BallisticProfile
 
     public string Xml { get; private init; } = "";
 
-    /// <summary>Разбирает ответ <c>cmd=6019</c>. Бросает исключение, если профиля там нет.</summary>
+    /// <summary>Parses a <c>cmd=6019</c> answer. Throws when there is no profile in it.</summary>
     public static BallisticProfile FromResponse(string xml)
     {
-        // Живой прибор заворачивает профиль в <String>. Голый JSON тоже принимаем:
-        // так клиент не падает на прокси и на прошивках, которые отдают JSON напрямую.
+        // A live device wraps the profile in <String>. Bare JSON is accepted too:
+        // so the client survives proxies and firmware that answers JSON directly.
         var m = Regex.Match(xml, "<String>(?<v>.*?)</String>", RegexOptions.Singleline);
         var body = (m.Success ? m.Groups["v"].Value : xml).Replace("\n", "").Replace("\r", "").Trim();
         if (!body.StartsWith("{", StringComparison.Ordinal))
@@ -52,9 +52,9 @@ public sealed class BallisticProfile
     }
 
     /// <summary>
-    /// Поля, у которых изменилось ТЕКСТОВОЕ представление. Именно так и надо
-    /// сравнивать: прицел отдаёт <c>3.00</c> там, где мы послали <c>3.0</c>, и
-    /// числовое сравние молчало бы там, где стоит шуметь.
+    /// Fields whose TEXTUAL representation changed. That is the right thing to
+    /// compare: the scope answers <c>3.00</c> where we sent <c>3.0</c>, and a
+    /// numeric comparison would stay silent exactly where it should make noise.
     /// </summary>
     public static IReadOnlyList<string> Diff(BallisticProfile a, BallisticProfile b) =>
         FieldOrder.Where(f => Get(a, f) != Get(b, f)).ToList();
@@ -68,10 +68,10 @@ public sealed class BallisticProfile
 }
 
 /// <summary>
-/// Число в том виде, в каком его отдаёт прицел: значение плюс исходная строка.
-/// Дробные поля (<c>BulletWt</c>, <c>BulletBC</c>, <c>ScopeHt</c>) прицел пишет с
-/// разной длиной хвоста, поэтому обратно отправлять надо исходную строку, а не
-/// пересчитанный double.
+/// A number in the shape the scope sends it: a value plus the original string.
+/// The device writes fractional fields (<c>BulletWt</c>, <c>BulletBC</c>, <c>ScopeHt</c>) with
+/// varying tail length, so what goes back is the original string, not a
+/// recomputed double.
 /// </summary>
 public readonly struct Num
 {
@@ -90,10 +90,10 @@ public readonly struct Num
         return new Num(t, double.NaN);
     }
 
-    /// <summary>Строка для отправки обратно: с тем же количеством знаков, что прислал прибор.</summary>
+    /// <summary>The string to send back: as many digits as the device sent.</summary>
     public string ToWire() => IsEmpty ? "" : Source;
 
-    /// <summary>Новое значение в том же инвариантном формате, что понимает прицел.</summary>
+    /// <summary>A new value in the same invariant format the scope understands.</summary>
     public Num With(double value) =>
         new Num(value.ToString("0.####", CultureInfo.InvariantCulture), value);
 
@@ -101,37 +101,37 @@ public readonly struct Num
 }
 
 /// <summary>
-/// Правило «это поле наш код не трогает». Проверено на прицеле 22.11:
+/// The rule "our code does not touch this field". Checked on the device 22.11:
 /// <list type="bullet">
-/// <item><description><c>DistanceSwitch</c> командой <c>6018</c> принимает только
-/// значение 1; записи 0 и 2 прибор отклоняет (перечитывание с повторами оставляет
-/// прежнее), а покойное значение 2 этой командой не выставляется вовсе. Значит
-/// штатное приложение меняет его другим каналом - <c>POST /</c> со <c>status=</c>,
-/// форма <c>value</c> которого ещё неизвестна. Пока пишем запрет: тихо оставить
-/// пользователя с другим режимом дистанции - хуже, чем не поменять вовсе.</description></item>
-/// <item><description><c>Sharp</c> - это резкость изображения, а не баллистика.
-/// Записывается она <c>6018</c> исправно (0 -&gt; 1 применилось с первого
-/// перечитывания), но в баллистическом профиле её менять не за чем, поэтому она
-/// в списке только показанных.</description></item>
-/// <item><description><c>Color</c> штатное приложение пишет через <c>cmd=6001</c>
-/// вместе с маркой, а не через профиль.</description></item>
+/// <item><description><c>DistanceSwitch</c> accepts only
+/// the value 1 through <c>6018</c>; the device rejects writes of 0 and 2 (repeated
+/// reads keep returning the old value), and its resting value of 2 cannot be set with
+/// this command at all. So the stock app changes it another way - <c>POST /</c> with <c>status=</c>,
+/// whose <c>value</c> shape is still unknown. For now the answer is no: quietly leaving
+/// the user on a different distance mode is worse than not changing it.</description></item>
+/// <item><description><c>Sharp</c> is image sharpness, not ballistics.
+/// It writes through <c>6018</c> just fine (0 -&gt; 1 applied on the first
+/// read-back), but there is no reason to change it in a ballistic profile, so it
+/// stays in the show-only list.</description></item>
+/// <item><description>The stock app writes <c>Color</c> through <c>cmd=6001</c>
+/// together with the reticle, not through the profile.</description></item>
 /// </list>
-/// <see cref="DistanceSwitch"/> показывается пользователю как есть.
+/// <see cref="DistanceSwitch"/> is shown to the user as it is.
 /// </summary>
 public static class FieldPolicy
 {
     public static readonly IReadOnlySet<string> ReadOnlyFields =
         new HashSet<string>(StringComparer.Ordinal) { "DistanceSwitch", "Sharp", "Color" };
 
-    /// <summary>Пишется последним: любая запись профиля сбрасывает его в 0.</summary>
+    /// <summary>Written last: any profile write resets it to 0.</summary>
     public const string BallisticData = "BallisticData";
 
     public static bool IsWritable(string field) => !ReadOnlyFields.Contains(field);
 
     /// <summary>
-    /// Порядок отправки: сначала всё обычное, BallisticData в конце. Спорные поля
-    /// (Sharp, Color, DistanceSwitch) из порядка выбрасываются совсем: иначе
-    /// батч падал бы исключением на середине, уже записав половину.
+    /// Send order: everything ordinary first, BallisticData at the end. Contested fields
+    /// (Sharp, Color, DistanceSwitch) are dropped from the order entirely: otherwise
+    /// the batch would throw halfway through, having already written half of it.
     /// </summary>
     public static IReadOnlyList<string> WriteOrder(IEnumerable<string> fields)
     {
@@ -150,7 +150,7 @@ public static class FieldPolicy
     };
 }
 
-/// <summary>Прицел ответил вежливо, но перечитывание показало другое.</summary>
+/// <summary>The scope answered politely, but the read-back showed something else.</summary>
 public sealed class ReadbackMismatchException : Exception
 {
     public string Field { get; }

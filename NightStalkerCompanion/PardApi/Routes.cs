@@ -11,44 +11,44 @@ namespace PardApi;
 /// </summary>
 public static class Routes
 {
-    /// <summary>Имена экранов — они же маршруты. Стартовый.</summary>
+    /// <summary>Screen names, which are also the routes. The start screen.</summary>
     public const string DevicePage = "DevicePage";
 
-    /// <summary>Вкладка медиа.</summary>
+    /// <summary>The media tab.</summary>
     public const string GalleryPage = "GalleryPage";
 
     /// <summary>
-    /// Экран по имени, от корня. Три слеша — абсолютный маршрут Shell: он ведёт туда
-    /// независимо от того, сколько экранов лежит сверху, поэтому ссылка не ломается,
-    /// когда между экранами кто-нибудь вставит ещё один push. Так же ходит эталонное
-    /// приложение Innowise.Music (`GoToAsync($"///{nameof(HomePage)}")`).
+    /// A screen by name, from the root. Three slashes make an absolute Shell route: it gets
+    /// there no matter how many screens are stacked on top, so the link does not break when
+    /// somebody inserts another push between screens. The reference app Innowise.Music
+    /// walks the same way (`GoToAsync($"///{nameof(HomePage)}")`).
     /// </summary>
     public static string Go(string page) => "///" + page;
 
     /// <summary>
-    /// Стартовый экран. Именно <see cref="Go"/> от имени страницы, а не не
-    /// <see cref="Back"/> в цикле: сколько экранов лежит сверху, экран не знает.
+    /// The start screen. Exactly <see cref="Go"/> by page name, not a <see cref="Back"/>
+    /// in a loop: a screen does not know how many screens lie on top of it.
     /// </summary>
     public static string Home => Go(DevicePage);
 
-    /// <summary>Один экран вверх, whatever that level turns out to be.</summary>
+    /// <summary>One screen up, whatever that level turns out to be.</summary>
     public static string Back => "../";
 
     /// <summary>
-    /// Куда ведёт «домой» со стека глубиной в <paramref name="pushedPages"/> экранов.
-    /// Ответ намеренно одинаков при любой глубине: глубина — это ровно то, из-за чего
-    /// относительная навигация была ненадёжной, а параметр существует, чтобы
-    /// вызывающий код не мог тихо передать то, что меняет результат.
+    /// Where "home" leads from a stack <paramref name="pushedPages"/> screens deep.
+    /// The answer is deliberately the same at any depth: depth is precisely what made
+    /// relative navigation unreliable, and the parameter exists so the caller cannot
+    /// quietly pass something that changes the result.
     /// </summary>
     public static string HomeFrom(int pushedPages) => Home;
 
     /// <summary>
-    /// Стоит ли вообще показывать кнопку «домой». На стартовом экране она повела бы
-    /// пользователя на страницу, где он уже находится, что читается как сломанная
-    /// кнопка, а не как пустое действие.
+    /// Whether to show the "home" button at all. On the start screen it would take the user
+    /// to a page they are already on, which reads as a broken button rather than as
+    /// an action that does nothing.
     /// </summary>
     public static bool HomeIsAvailable(bool onStartScreen) => !onStartScreen;
 
-    /// <summary>Экран марки группы. Читать марку группы — значит выбрать эту группу.</summary>
+    /// <summary>The group's reticle screen. Reading a group's reticle means selecting that group.</summary>
     public static string Reticle(int group) => $"{nameof(Reticle).ToLowerInvariant()}?group={group}";
 }

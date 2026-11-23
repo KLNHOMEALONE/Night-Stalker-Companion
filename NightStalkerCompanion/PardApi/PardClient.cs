@@ -3,31 +3,31 @@ using System.Text.RegularExpressions;
 
 namespace PardApi;
 
-/// <summary>Что прицел ответил на запрос: код, теле, разбор конверта.</summary>
+/// <summary>What the scope answered: code, body, envelope parse.</summary>
 public sealed record PardReply(int HttpStatus, string Body, int? Cmd, int? Status)
 {
     public bool HasEnvelope => Cmd.HasValue && Status.HasValue;
     /// <summary>
-    /// Ловушка, на которой сломаны все слепые переборы: прицел отвечает конвертом
-    /// <c>&lt;Cmd&gt;3027&lt;/Cmd>&lt;Status&gt;0&lt;/Status&gt;</c> на ЛЮБОЕ тело
-    /// POST, включая выдуманное имя команды. Поэтому <c>Status == 0</c> не значит
-    /// «команда понята», а значит лишь «модуль hfs жив». Единственный настоящий
-    /// признак применённой записи - перечитывание.
+    /// The trap that breaks every blind sweep: the scope answers
+    /// <c>&lt;Cmd&gt;3027&lt;/Cmd>&lt;Status&gt;0&lt;/Status&gt;</c>
+    /// to ANY POST body, including an invented command name. So <c>Status == 0</c> does
+    /// not mean "the command was understood", it only means "the hfs module is alive".
+    /// The one real sign that a write took effect is reading it back.
     /// </summary>
     public bool IsGenericPostAnswer => Cmd == 3027 && Status == 0;
 }
 
 /// <summary>
-/// Транспорт и разбор команд прицела PARD Night Stalker 4K.
+/// Transport and command parsing for the PARD Night Stalker 4K scope.
 ///
-/// Всё, что умеет прибор по Wi-Fi, это GET на <c>http://192.168.1.254</c>:
-///   <c>/?custom=1&amp;cmd=N</c>            чтение (тело есть только у чтения);
-///   <c>/?custom=1&amp;cmd=N&amp;par=P&amp;Поле=значение</c>   запись;
-///   <c>/?custom=1&amp;cmd=N&amp;str=текст</c>                 строковые аргументы.
-/// POST прицел не разбирает, а на команды без тела отвечает пустым
-/// <c>&lt;Status&gt;0&lt;/Status&gt;</c> и что-то делает, поэтому клиент ходит сюда
-/// только теми командами, у которых уже наблюдалось тело, либо записью со
-/// обязательным перечитыванием.
+/// Everything the device offers over Wi-Fi is a GET on <c>http://192.168.1.254</c>:
+///   <c>/?custom=1&amp;cmd=N</c>            reading (only reads have a body);
+///   <c>/?custom=1&amp;cmd=N&amp;par=P&amp;Field=value</c>   writing;
+///   <c>/?custom=1&amp;cmd=N&amp;str=text</c>                 string arguments.
+/// The scope does not parse POST, and answers commands without a body with an empty
+/// <c>&lt;Status&gt;0&lt;/Status&gt;</c> while still doing something, so the client comes here
+/// only with commands whose body has actually been observed, or with a write that
+/// is always followed by a read-back.
 /// </summary>
 public sealed class PardClient : IDisposable
 {
@@ -43,8 +43,8 @@ public sealed class PardClient : IDisposable
         http = new HttpClient
         {
             Timeout = timeout ?? TimeSpan.FromSeconds(5),
-            // Прицел держит соединение и не любит переиспользование между
-            // быстрыми запросами; keep-alive здесь только мешает.
+            // The scope holds the connection open and dislikes reuse between
+            // rapid requests; keep-alive only gets in the way here.
         };
         http.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "PardApi/1.0");
         http.DefaultRequestHeaders.ConnectionClose = false;
@@ -53,7 +53,7 @@ public sealed class PardClient : IDisposable
     static readonly Regex Envelope = new(
         @"<Cmd>(?<cmd>-?\d+)</Cmd>\s*<Status>(?<st>-?\d+)</Status>", RegexOptions.Singleline);
 
-    /// <summary>Один GET и разбор конверта. Бросает исключение на сетевом отказе.</summary>
+    /// <summary>One GET and one envelope parse. Throws on a network failure.</summary>
     public async Task<PardReply> GetAsync(string query, CancellationToken ct = default)
     {
         var url = baseUrl + "/?" + query.TrimStart('?', '/');
@@ -68,7 +68,7 @@ public sealed class PardClient : IDisposable
     public Task<string> GetBodyAsync(string query, CancellationToken ct = default)
         => GetAsync(query, ct).ContinueWith(r => r.Result.Body, ct);
 
-    /// <summary>Номер прошивки. После неудачного обновления прибор отдаёт 0.</summary>
+    /// <summary>Firmware number. After a failed update the device answers 0.</summary>
     public async Task<int> FirmwareAsync(CancellationToken ct = default)
     {
         var r = await GetAsync("custom=1&cmd=1003", ct).ConfigureAwait(false);
@@ -76,7 +76,7 @@ public sealed class PardClient : IDisposable
         return m.Success ? int.Parse(m.Groups["v"].Value) : -1;
     }
 
-    /// <summary>Имя сборки, например <c>PARD_Night Stalker 4K_EN_20241212</c>.</summary>
+    /// <summary>Build name, for example <c>PARD_Night Stalker 4K_EN_20241212</c>.</summary>
     public async Task<string> ModelAsync(CancellationToken ct = default)
     {
         var r = await GetAsync("custom=1&cmd=3012", ct).ConfigureAwait(false);
@@ -84,7 +84,7 @@ public sealed class PardClient : IDisposable
         return m.Success ? m.Groups["v"].Value : "";
     }
 
-    /// <summary>Баллистический профиль целиком.</summary>
+    /// <summary>The whole ballistic profile.</summary>
     public async Task<BallisticProfile> ReadProfileAsync(CancellationToken ct = default)
     {
         var r = await GetAsync("custom=1&cmd=6019", ct).ConfigureAwait(false);
@@ -92,10 +92,10 @@ public sealed class PardClient : IDisposable
     }
 
     /// <summary>
-    /// Пачка состояния соседних команд одной командой <c>3014</c>: прицел сам
-    /// возвращает список пар <c>&lt;Cmd&gt;/&lt;Status&gt;</c>, где Status - это
-    /// текущее значение. Дешевле десятка отдельных запросов и, главное, безопасно:
-    /// это чтение.
+    /// The state of neighbouring commands in a single <c>3014</c>: the scope itself
+    /// returns a list of <c>&lt;Cmd&gt;/&lt;Status&gt;</c> pairs, where Status is the current
+    /// value. Cheaper than ten separate requests and, more importantly, safe:
+    /// this is a read.
     /// </summary>
     public async Task<IReadOnlyDictionary<int, int>> ReadStatusBatchAsync(CancellationToken ct = default)
     {
@@ -111,7 +111,7 @@ public sealed class PardClient : IDisposable
         return result;
     }
 
-    /// <summary>Текущая прицельная марка (cmd=6009).</summary>
+    /// <summary>The current reticle (cmd=6009).</summary>
     public async Task<Reticle> ReadReticleAsync(CancellationToken ct = default)
     {
         var r = await GetAsync("custom=1&cmd=6009", ct).ConfigureAwait(false);
@@ -119,14 +119,14 @@ public sealed class PardClient : IDisposable
     }
 
     /// <summary>
-    /// Сменить марку. Пишем одной командой сразу несколько полей, как это делает
-    /// штатное приложение: <c>cmd=6001&amp;par=&amp;Style=4&amp;Color=1</c>.
-    /// Проверка перечитыванием обязательна: <c>&lt;Status&gt;0&lt;/Status&gt;</c>
-    /// на этом приборе не значит ничего.
+    /// Change the reticle. Written as several fields in one command, the way the stock
+    /// app does it: <c>cmd=6001&amp;par=&amp;Style=4&amp;Color=1</c>.
+    /// The read-back check is mandatory: <c>&lt;Status&gt;0&lt;/Status&gt;</c>
+    /// means nothing on this device.
     /// </summary>
     /// <param name="validateStyle">
-    /// false, если нужно записать стиль вне подтверждённого диапазона 0..6
-    /// (0 при этом не ошибка: это <see cref="Reticle.OffStyle"/> - марка выключена).
+    /// false when a style outside the confirmed range 0..6 has to be written
+    /// (0 is not an error here: that is <see cref="Reticle.OffStyle"/> — the reticle is off).
     /// </param>
     public async Task<Reticle> WriteReticleAsync(
         Reticle target, bool validateStyle = true, CancellationToken ct = default)
@@ -165,22 +165,22 @@ public sealed class PardClient : IDisposable
         return after;
     }
 
-    /// <summary>Быстро поставить только стиль, остальное не трогаем.</summary>
+    /// <summary>Set the style only, quickly, leaving everything else alone.</summary>
     public Task<Reticle> WriteStyleAsync(int style, bool validateStyle = true, CancellationToken ct = default)
         => ReadReticleAsync(ct).ContinueWith(
                r => WriteReticleAsync(r.Result.WithStyle(style), validateStyle, ct), ct).Unwrap();
 
     /// <summary>
-    /// Записать одно поле профиля. Всегда с перечитыванием: ответ
-    /// <c>&lt;Status&gt;0&lt;/Status&gt;</c> ничего не гарантирует.
+    /// Write one profile field. Always with a read-back: the answer
+    /// <c>&lt;Status&gt;0&lt;/Status&gt;</c> guarantees nothing.
     /// </summary>
     /// <param name="group">
-    /// Значение <c>par</c>. В живых записях штатное приложение шлёт <c>par=0</c>;
-    /// есть подозрение, что это индекс группы пристрелки, и для части полей он
-    /// значим (см. notes/CMD_TABLE.md, раздел «ОТЛОЖЕНО: DistanceSwitch»).
+    /// The value of <c>par</c>. In live writes the stock app sends <c>par=0</c>;
+    /// there is reason to think this is the zeroing group index, and for some fields it
+    /// matters (see notes/CMD_TABLE.md, the section "ОТЛОЖЕНО: DistanceSwitch").
     /// </param>
-    /// <exception cref="InvalidOperationException">поле запрещено к записи политикой.</exception>
-    /// <exception cref="ReadbackMismatchException">прицел вернул другое значение.</exception>
+    /// <exception cref="InvalidOperationException">the field is not writable by policy.</exception>
+    /// <exception cref="ReadbackMismatchException">the scope returned a different value.</exception>
     public async Task<BallisticProfile> WriteFieldAsync(
         string field, string value, int group = 0, CancellationToken ct = default)
     {
@@ -189,7 +189,7 @@ public sealed class PardClient : IDisposable
                 $"поле '{field}' намеренно не пишется этим клиентом: {FieldPolicy.Reason(field)}");
 
         var before = await ReadProfileAsync(ct).ConfigureAwait(false);
-        if (Snapshot is null) Snapshot = before;   // чтобы RestoreAsync работал и после одиночной записи
+        if (Snapshot is null) Snapshot = before;   // so RestoreAsync works after a single write as well
         var beforeWire = before.Raw.TryGetValue(field, out var b) ? b : "";
 
         var q = $"custom=1&cmd=6018&par={group}&{Uri.EscapeDataString(field)}={Uri.EscapeDataString(value)}";
@@ -207,13 +207,13 @@ public sealed class PardClient : IDisposable
         return after;
     }
 
-    /// <summary>Что было записано последним: поле, значение до, после, группа, статус.</summary>
+    /// <summary>What was written last: field, value before, after, group, status.</summary>
     public (string Field, string Before, string After, int Group, int Status)? LastWrite { get; private set; }
 
     /// <summary>
-    /// Записать сразу несколько полей в правильном порядке: BallisticData всегда
-    /// последним, потому что любая запись профиля сбрасывает его в 0. Перед началом
-    /// снимает профиль целиком, чтобы вызывающий мог откатиться по Diff.
+    /// Write several fields at once in the right order: BallisticData always
+    /// last, because any profile write resets it to 0. Takes a full profile snapshot
+    /// first, so the caller can roll back with Diff.
     /// </summary>
     public async Task<BallisticProfile> WriteFieldsAsync(
         IReadOnlyDictionary<string, string> values, int group = 0, CancellationToken ct = default)
@@ -226,20 +226,20 @@ public sealed class PardClient : IDisposable
         {
             if (!values.TryGetValue(field, out var value)) continue;
             if (profile.Raw.TryGetValue(field, out var current) && NumericallyEqual(current, value))
-                continue;                                   // и так такое значение
+                continue;   // already that value
             last = await WriteFieldAsync(field, value, group, ct).ConfigureAwait(false);
             profile = last;
         }
         return profile;
     }
 
-    /// <summary>Поля, которые вызывающий просил записать, но политика не позволила.</summary>
+    /// <summary>Fields the caller asked to write but the policy refused.</summary>
     public IReadOnlyList<string> LastSkipped { get; private set; } = Array.Empty<string>();
 
-    /// <summary>Снимок профиля перед последней пакетной записью (для отката).</summary>
+    /// <summary>The profile snapshot before the last batch write (for rollback).</summary>
     public BallisticProfile? Snapshot { get; private set; }
 
-    /// <summary>Вернуть снимок обратно. Спорные поля не трогаются политикой.</summary>
+    /// <summary>Put the snapshot back. Contested fields are left alone by policy.</summary>
     public async Task<BallisticProfile?> RestoreAsync(CancellationToken ct = default)
     {
         if (Snapshot is null) return null;
@@ -253,8 +253,8 @@ public sealed class PardClient : IDisposable
     }
 
     /// <summary>
-    /// Прицел отдаёт <c>3.00</c> на присланное <c>3.0</c>, поэтому сравнение
-    /// числовое, а не строковое. Нечисловые значения сравниваются как строки.
+    /// The scope answers <c>3.00</c> to a sent <c>3.0</c>, so the comparison is
+    /// numeric, not textual. Non-numeric values compare as strings.
     /// </summary>
     static bool NumericallyEqual(string a, string b) =>
         double.TryParse(a, System.Globalization.NumberStyles.Float,

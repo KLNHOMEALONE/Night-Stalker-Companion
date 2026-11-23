@@ -30,22 +30,21 @@ public static class MauiProgram
         // One shared device state for every screen — see the comment on AppState.
         builder.Services.AddSingleton<AppState>();
 
-        // Регистрация парами «вьюмодель → вьюха», жизнь по типу экрана — как в
-        // эталонном Innowise.Music: вкладка живёт всё время работы приложения, а
-        // push-экран создаётся заново на каждое открытие.
+        // Registered as "view model to view" pairs, with the lifetime following the screen
+        // type, the way the reference Innowise.Music does it: a tab lives for the whole run of
+        // the app, a push screen is rebuilt on every opening.
         //
-        // Push-экраны не могут быть синглтонами: ReticleViewModel держит TargetGroup,
-        // и общий на все открытия экран открыл бы группу, от которой ты ушёл десять
-        // экранов назад.
+        // Push screens cannot be singletons: ReticleViewModel holds TargetGroup, and one screen
+        // shared by every opening would open the group you left ten screens ago.
 
-        // Вкладки.
+        // Tabs.
         builder.Services.AddSingleton<DeviceViewModel>();
         builder.Services.AddSingleton<DevicePage>();
 
         builder.Services.AddSingleton<GalleryViewModel>();
         builder.Services.AddSingleton<GalleryPage>();
 
-        // Экраны, которые открываются поверх вкладок.
+        // Screens that open on top of the tabs.
         builder.Services.AddTransient<LiveViewModel>();
         builder.Services.AddTransient<LiveViewPage>();
 
@@ -58,8 +57,8 @@ public static class MauiProgram
         builder.Services.AddTransient<UnitsViewModel>();
         builder.Services.AddTransient<UnitsPage>();
 
-        // Сам Shell тоже из контейнера: тогда у него есть те же зависимости, что у
-        // остальных, и маршруты регистрируются в одном месте.
+        // The Shell itself comes from the container as well: then it has the same dependencies
+        // as everything else, and the routes are registered in one place.
         builder.Services.AddSingleton<AppShell>();
 
 #if DEBUG

@@ -4,28 +4,28 @@ using System.Text.RegularExpressions;
 namespace PardApi;
 
 /// <summary>
-/// Прицельная марка: один объект, который прицел отдаёт командой
+/// The reticle: the single object the scope answers with,
 /// <c>GET /?custom=1&amp;cmd=6009</c>:
 /// <c>{ "GroupId": 0, "PosX": 0, "PosY": 0, "Style": 3, "Color": 1 }</c>.
-/// Пишется другой командой - <c>cmd=6001</c>, и, в отличие от баллистического
-/// профиля, несколькими полями в одном запросе (так делает штатное приложение).
+/// It is written with a different command - <c>cmd=6001</c> - and, unlike the ballistic
+/// profile, with several fields in one request (that is how the stock app does it).
 /// </summary>
 public sealed class Reticle
 {
     /// <summary>
-    /// Значение <c>Style</c>, при котором прицельной марки нет вообще. Проверено
-    /// на железе 22.11 кадром из видеозаписи прицела: при <c>Style=0</c> в центре
-    /// кадра ноль ярких пикселей, то есть это не «первая марка», а выключенная.
-    /// Верхняя граница <see cref="MaxStyle"/>.
+    /// The <c>Style</c> value at which there is no reticle at all. Checked
+    /// on hardware 22.11 with a frame from the scope's own video: at <c>Style=0</c> the centre of
+    /// the frame has zero bright pixels, so this is not "the first reticle" but a turned-off one.
+    /// The upper bound is <see cref="MaxStyle"/>.
     /// </summary>
     public const int OffStyle = 0;
 
     /// <summary>
-    /// Верхняя граница <c>Style</c>. Марок шесть, они занимают 1..6, ноль - это
-    /// <see cref="OffStyle"/>. Подтверждено записью и перечитыванием всех семи
-    /// значений и снимками экранов, так что диапазон теперь факт, а не страховка.
-    /// При необходимости пишите за ним: <see cref="PardClient.WriteReticleAsync"/>
-    /// с <c>validateStyle: false</c>.
+    /// The upper bound of <c>Style</c>. There are six reticles, they take 1..6, and zero is
+    /// <see cref="OffStyle"/>. Confirmed by writing and reading back all seven
+    /// values and by screen captures, so the range is a fact now, not a safety margin.
+    /// Write past it if you must: <see cref="PardClient.WriteReticleAsync"/>
+    /// with <c>validateStyle: false</c>.
     /// </summary>
     public const int MaxStyle = 6;
 
@@ -54,24 +54,24 @@ public sealed class Reticle
     }
 
     /// <summary>
-    /// Марка сейчас включена. Ложь только при <see cref="OffStyle"/>.
-    /// Про превью: рисовать картинку марки можно, только если здесь
-    /// <see langword="true"/>; иначе интерфейс покажет марку там, где прицел
-    /// показывает пустой кадр.
+    /// Whether the reticle is on. False only for <see cref="OffStyle"/>.
+    /// About previews: a reticle picture may be drawn only when this is
+    /// <see langword="true"/>; otherwise the interface would show a reticle where the scope
+    /// shows an empty frame.
     /// </summary>
     public bool IsEnabled => Style != OffStyle;
 
     /// <summary>
-    /// Стиль, для которого есть картинка-превью, либо <see langword="null"/>,
-    /// когда марка выключена. Нужен затем, чтобы интерфейс не рисовал превью
-    /// там, где прицел показывает пустой кадр; ассеты лежат по номеру стиля.
+    /// The style that has a preview picture, or <see langword="null"/>
+    /// when the reticle is off. Needed so the interface does not draw a preview
+    /// where the scope shows an empty frame; assets are stored by style number.
     /// </summary>
     public int? PreviewStyle => IsEnabled ? Style : null;
 
-    /// <summary>Копия с заменой стиля. 0 = <see cref="OffStyle"/>, марка гаснет.</summary>
+    /// <summary>A copy with the style replaced. 0 = <see cref="OffStyle"/>, the reticle goes out.</summary>
     public Reticle WithStyle(int style) => new(GroupId, style, Color, PosX, PosY, Raw);
 
-    /// <summary>Копия с выключенной маркой - то же самое, что <c>WithStyle(OffStyle)</c>.</summary>
+    /// <summary>A copy with the reticle turned off - the same as <c>WithStyle(OffStyle)</c>.</summary>
     public Reticle WithReticleOff() => new(GroupId, OffStyle, Color, PosX, PosY, Raw);
 
     /// <summary>A copy with a different colour. The range is not checked here —
@@ -101,7 +101,7 @@ public sealed class Reticle
     public static Reticle Create(int groupId, int style, int color, int posX, int posY) =>
         new(groupId, style, color, posX, posY, "");
 
-    /// <summary>Поля, у которых мы просим другое значение, - для пакетной записи.</summary>
+    /// <summary>The fields we are asking to change - for a batch write.</summary>
     public IReadOnlyDictionary<string, string> ChangesTo(Reticle other)
     {
         var d = new Dictionary<string, string>();

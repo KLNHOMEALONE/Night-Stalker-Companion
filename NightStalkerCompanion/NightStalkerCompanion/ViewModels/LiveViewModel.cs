@@ -73,8 +73,8 @@ public partial class LiveViewModel : ScopePageViewModel
     /// </summary>
     public string RecordText => "● REC — состояние записи прибором не читается";
 
-    // «Назад» больше не отсюда: команда живёт в ScopePageViewModel и ведёт себя
-    // одинаково на всех экранах, а не по-своему на каждом.
+    // "Back" no longer lives here: the command is in ScopePageViewModel and behaves the
+    // same on every screen instead of its own way on each one.
 
     private void Raise()
     {

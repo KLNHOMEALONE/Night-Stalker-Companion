@@ -17,10 +17,10 @@ public partial class App : Application
 		// mean a white scope app at dusk.
 	}
 
-	// Shell приходит из контейнера, как в эталонном Innowise.Music, и именно здесь,
-	// а не параметром конструктора: AppShell красится токенами из App.xaml, которые
-	// сливаются только в InitializeComponent выше, — созданный раньше Shell упал бы с
-	// «StaticResource not found for key Screen».
+	// The Shell comes from the container, like the reference Innowise.Music, and it is set
+	// here rather than as a constructor parameter: AppShell paints itself with the tokens
+	// from App.xaml, which only merge in the InitializeComponent above, so a Shell created
+	// earlier would fail with "StaticResource not found for key Screen".
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
 		var appShell = serviceProvider.GetRequiredService<AppShell>();

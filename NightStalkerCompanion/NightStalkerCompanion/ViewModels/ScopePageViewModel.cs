@@ -69,17 +69,17 @@ public abstract partial class ScopePageViewModel : ObservableObject
             : Services.UnitSystem.Metric;
 
     /// <summary>
-    /// «Назад» — на один экран вверх. Работает через <see cref="Routes"/>, а не через
-    /// строку маршрута в разметке: куда именно ведёт кнопка — это решение, и оно
-    /// покрыто тестами, а разметка нет.
+    /// "Back" goes one screen up. It works through <see cref="Routes"/> rather than a
+    /// route string in the markup: where exactly the button leads is a decision, and it is
+    /// covered by tests, which the markup is not.
     /// </summary>
     [RelayCommand]
     private async Task BackAsync() => await Shell.Current.GoToAsync(Routes.Back);
 
     /// <summary>
-    /// «Девайс» — на стартовый экран за один тап с любой глубины. Именно для этого
-    /// он абсолютный маршрут на таб, а не <see cref="BackCommand"/> в цикле: сколько
-    /// экранов лежит сверху, экран не знает.
+    /// "Device" returns to the start screen in one tap from any depth. That is exactly why it
+    /// is an absolute route to the tab and not a <see cref="BackCommand"/> in a loop: a screen
+    /// does not know how many screens lie on top of it.
     /// </summary>
     [RelayCommand]
     private async Task GoHomeAsync() => await Shell.Current.GoToAsync(Routes.Home);

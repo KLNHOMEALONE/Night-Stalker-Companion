@@ -1,12 +1,12 @@
 namespace PardApi;
 
 /// <summary>
-/// Группа прицельных марок (и, судя по всему, баллистический профиль той же
-/// группы). На экране прицела группы подписаны буквами <c>A B C D E</c>, штатное
-/// приложение показывает им соответствующие номера <c>0..4</c> - именно из-за этого
-/// расхождения в оригинальном приложении приходится держать в голове,
-/// какую марку ты сейчас правишь. Здесь буквы и есть основной способ говорить о
-/// группах; числа остаются только в запросах.
+/// A group of reticles (and, by all accounts, the ballistic profile of the same
+/// group). The scope's screen labels the groups <c>A B C D E</c> while the stock
+/// app shows those the numbers <c>0..4</c> - which is exactly why the original
+/// app makes you remember which reticle you are editing.
+/// Here letters are the primary way of talking about groups; numbers survive
+/// only inside requests.
 /// </summary>
 public enum Group
 {
@@ -18,23 +18,23 @@ public enum Group
 }
 
 /// <summary>
-/// Соответствие букв и индекса <c>par=</c> в <c>GET /?custom=1&amp;cmd=...&amp;par=N</c>.
+/// The letters and the <c>par=</c> index in <c>GET /?custom=1&amp;cmd=...&amp;par=N</c>.
 /// </summary>
 public static class Groups
 {
-    /// <summary>Групп ровно пять - A..E (данные владельца прицела).</summary>
+    /// <summary>There are exactly five groups - A..E (the scope owner's data).</summary>
     public const int Count = 5;
 
     /// <summary>
-    /// Значение <c>par</c> для группы. Соответствие «буква ↔ номер» взято из
-    /// штатного приложения, где A=0 ... E=4; что именно выбирает <c>par</c> на
-    /// приборе проверяется чтением <c>cmd=6009&amp;par=N</c> по всем группам.
-    /// Пока это не подтверждено, не полагайтесь на <c>par</c> как на указатель на
-    /// <see cref="Reticle.GroupId"/> - это могут быть разные счётчики.
+    /// The <c>par</c> value for a group. The letter-to-number mapping comes from
+    /// the stock app, where A=0 ... E=4; what <c>par</c> actually selects on the
+    /// device is checked by reading <c>cmd=6009&amp;par=N</c> across all groups.
+    /// Until that is confirmed, do not rely on <c>par</c> as a pointer to
+    /// <see cref="Reticle.GroupId"/> - they may be different counters.
     /// </summary>
     public static int Par(this Group g) => (int)g;
 
-    /// <summary>Буква группы - так её показывает прицел.</summary>
+    /// <summary>The group letter - the way the scope shows it.</summary>
     public static string Name(this Group g) => ((char)('A' + (int)g)).ToString();
 
     public static bool TryParse(string? s, out Group group)
@@ -60,8 +60,8 @@ public static class Groups
     }
 
     /// <summary>
-    /// Проверка индекса из ответа прибора. Молча превращать незнакомое число в
-    /// A нельзя: молча покажется не та марка.
+    /// Checking an index that came from the device. Silently turning an unknown number into
+    /// A is not possible: it would quietly show the wrong reticle.
     /// </summary>
     public static Group FromIndex(int index) =>
         TryFromIndex(index, out var g)
@@ -69,7 +69,7 @@ public static class Groups
             : throw new ArgumentOutOfRangeException(nameof(index),
                 $"группа {index} вне диапазона 0..{Count - 1} (A..{Name((Group)(Count - 1))})");
 
-    /// <summary>Все группы по порядку - для списка в интерфейсе.</summary>
+    /// <summary>All groups in order - for the list in the interface.</summary>
     public static IReadOnlyList<Group> All { get; } =
         Enumerable.Range(0, Count).Select(i => (Group)i).ToList();
 

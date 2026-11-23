@@ -58,16 +58,16 @@ public partial class ReticleViewModel : ScopePageViewModel
     public int PosX => Edited?.PosX ?? 0;
     public int PosY => Edited?.PosY ?? 0;
 
-    // Поле ввода — черновик: пока экран ничего не записывал, в нём то, что набрал
-    // пользователь; после любой записи (и после «−»/«+», которые пишут сразу) черновик
-    // выбрасывается, и поле снова показывает число из прибора. Иначе экран показывал
-    // бы одно, а прибор держал другое.
+    // The input field is a draft: until the screen has written something it holds what the
+    // user typed; after any write (and after "-" / "+", which write immediately) the draft
+    // is thrown away and the field shows the device number again. Otherwise the screen
+    // would show one thing while the device held another.
     private string? xInput;
     private string? yInput;
 
     /// <summary>
-    /// Смещение X как его видит поле ввода: набираемое значение, а пока ничего не
-    /// набирают — записанное в прицеле.
+    /// Offset X as the input field sees it: the value being typed, and while nobody is
+    /// typing, the value written in the scope.
     /// </summary>
     public string XInput
     {
@@ -75,7 +75,7 @@ public partial class ReticleViewModel : ScopePageViewModel
         set => SetProperty(ref xInput, value);
     }
 
-    /// <summary>Смещение Y, то же самое.</summary>
+    /// <summary>Offset Y, the same thing.</summary>
     public string YInput
     {
         get => yInput ?? OffsetInput.Format(PosY);
@@ -96,10 +96,10 @@ public partial class ReticleViewModel : ScopePageViewModel
     private string? offsetRefusal;
 
     /// <summary>
-    /// Почему последняя попытка записать смещение не удалась. Пусто, когда отказывать
-    /// нечего. Это не вердикт записи и живёт он не по её правилам: карточка остаётся на
-    /// экране после <see cref="Rebuild"/>, чтобы человек успел её прочитать, и гаснет
-    /// сама, когда следующая попытка пройдёт.
+    /// Why the last attempt to write an offset failed. Empty when there is nothing to refuse.
+    /// This is not the write verdict and it does not live by its rules: the card stays on
+    /// screen through <see cref="Rebuild"/> so the user has time to read it, and goes away
+    /// on its own once the next attempt succeeds.
     /// </summary>
     public string? OffsetRefusal
     {
@@ -114,8 +114,8 @@ public partial class ReticleViewModel : ScopePageViewModel
     public bool HasOffsetRefusal => !string.IsNullOrEmpty(offsetRefusal);
 
     /// <summary>
-    /// Отказ один на два пути ввода — поле и степперы: придел у прибора один, и с какой
-    /// стороны к нему не подошли, вранья быть не должно.
+    /// The refusal is shared by both ways in, the field and the steppers: the device has one
+    /// limit, and it should not matter which side of it you approached from.
     /// </summary>
     private static string Refusal(string axisName, bool fromField) =>
         $"Смещение {axisName} вне предела ±{OffsetLimits.YLimit}: прицел такой величины не держит. "
@@ -173,9 +173,9 @@ public partial class ReticleViewModel : ScopePageViewModel
         int delta = int.Parse(parts[1]);
         int moved = (xAxis ? r.PosX : r.PosY) + delta;
 
-        // Без этого шага степпер уходил бы за тот же предел, который отказывает полю:
-        // восемьдесят нажатий «+» от нуля доводят Y до величины, которой прицел не держит,
-        // и притом дорогой, которую стена закрывать и должна.
+        // Without this check the steppers would walk past the very limit the field refuses:
+        // eighty taps of "+" from zero reach a Y the scope cannot hold, and that road is
+        // exactly the one the limit is supposed to close.
         if (!OffsetLimits.Within(xAxis, moved))
         {
             OffsetRefusal = Refusal(xAxis ? "X" : "Y", fromField: false);
@@ -190,9 +190,9 @@ public partial class ReticleViewModel : ScopePageViewModel
     }
 
     /// <summary>
-    /// Записать смещение, набранное в поле, — одним нажатием вместо двухсот «+».
-    /// Пустое или непонятное поле ничего не пишет: прибор остаётся с тем смещением,
-    /// которое на нём уже есть, а поле возвращается к нему же, чтобы не врать.
+    /// Write the offset typed into the field - one press instead of two hundred "+".
+    /// An empty or unreadable field writes nothing: the device keeps the offset it already
+    /// has, and the field returns to it rather than lying about it.
     /// </summary>
     [RelayCommand]
     private async Task ApplyOffsetAsync(string axis)
@@ -207,10 +207,10 @@ public partial class ReticleViewModel : ScopePageViewModel
             return;
         }
 
-        // Черновик выбрасывается и здесь: число, которого прицел не держит, не должно
-        // оставаться в поле, потому что следующий «Enter» записал бы его же. От кривого
-        // ввода этот случай отличается тем, что причину надо назвать: прибор значение не
-        // отверг, это мы его не пускаем, и молча вернуть старое число было бы обидно.
+        // The draft is thrown away here too: a number the scope cannot hold must not stay in the
+        // field, because the next "Enter" would write it. This differs from malformed input in
+        // that the reason has to be said out loud: the device did not reject the value, we did,
+        // and quietly putting the old number back would read as nothing having happened.
         if (!OffsetLimits.Within(xAxis, value))
         {
             OffsetRefusal = Refusal(xAxis ? "X" : "Y", fromField: true);
@@ -231,8 +231,8 @@ public partial class ReticleViewModel : ScopePageViewModel
     }
 
     /// <summary>
-    /// Сменить знак набранного. На цифровой клавиатуре iOS минуса нет, так что
-    /// отрицательное значение нужно уметь получить не только с аппаратной клавиатуры.
+    /// Flip the sign of what was typed. The iOS numeric keyboard has no minus, so a negative
+    /// value has to be reachable without a hardware keyboard.
     /// </summary>
     [RelayCommand]
     private void FlipOffset(string axis)
@@ -272,8 +272,8 @@ public partial class ReticleViewModel : ScopePageViewModel
         OnPropertyChanged(nameof(PosX));
         OnPropertyChanged(nameof(PosY));
 
-        // Черновик полей ввода живёт до любой записи: с этого момента поле обязано
-        // показывать число, которое реально держит прибор.
+        // The input draft lives until any write: from that moment the field has to show
+        // the number the device actually holds.
         xInput = yInput = null;
         OnPropertyChanged(nameof(XInput));
         OnPropertyChanged(nameof(YInput));

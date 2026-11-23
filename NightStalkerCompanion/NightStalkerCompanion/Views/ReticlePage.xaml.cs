@@ -20,10 +20,10 @@ public partial class ReticlePage : ContentPage
     }
 
     /// <summary>
-    /// Enter в поле смещения = «записать». Текст забирается из поля прямо здесь, а не
-    /// через привязку: двусторонняя привязка Entry отдаёт значение только при потере
-    /// фокуса, а Enter фокус не забирает, и на команду ушёл бы старый текст. Ось поля
-    /// приходит в StyleId, их две — X и Y.
+    /// Enter in the offset field means "write". The text is taken from the field right here,
+    /// not through the binding: a two-way Entry binding only commits on focus loss, Enter does
+    /// not take focus away, and the command would get the old text. The field's axis arrives in
+    /// StyleId; there are two of them, X and Y.
     /// </summary>
     private void OnOffsetCompleted(object? sender, EventArgs e)
     {

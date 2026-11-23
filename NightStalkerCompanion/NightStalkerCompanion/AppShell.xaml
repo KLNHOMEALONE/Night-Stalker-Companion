@@ -12,13 +12,14 @@
     TabBarUnselectedColor="{StaticResource Ink3}"
     FlyoutBehavior="Disabled">
 
-    <!-- Two tabs, exactly as the original app has them: «Девайс» and «Галерея».
+    <!-- Two tabs, exactly as the original app has them: "Девайс" and "Галерея".
          The structure the user memorised is not up for argument; what changes is
          what is inside them (ui/prototype/index.html, screen 01 notes).
 
-         Маршрут ShellContent — это имя экрана, как в эталонном Innowise.Music: тогда
-         на любой экран можно уйти абсолютным «///DevicePage» из любой глубины стека,
-         и возврат на стартовый не зависит от того, сколько экранов поверх него лежит. -->
+         The ShellContent route is the screen name, as in the reference Innowise.Music:
+         that way any screen is reachable by the absolute "///DevicePage" from any stack
+         depth, and returning to the start screen does not depend on how many screens
+         sit on top of it. -->
 
     <Tab
         Title="Девайс"
