@@ -383,12 +383,30 @@ public sealed class PardService : IPardService, IDisposable
         => Client.GetAsync($"custom=1&cmd=6018&par=0&{FieldPolicy.BallisticData}={groupIndex}", ct);
 
     /// <summary>
-    /// Compared as text, the way BallisticProfile.Diff does it: the device answers
-    /// "3.00" where we sent "3.0", and a numeric comparison would stay silent
-    /// exactly where it should be noisy.
+    /// As numbers where both sides are numbers, as text where they are not.
+    ///
+    /// The device pads: send <c>3.0</c> and it answers <c>3.00</c>, and <c>7.1</c> and <c>7.10</c>
+    /// are one number. Compared as text that is a write that worked reported as a field that did
+    /// not take — which is what a hand-typed tail does, since a user types <c>0.5</c> into a field
+    /// the sight sent as <c>0.500</c>.
+    ///
+    /// What still makes noise is the thing that has to: a different number. A sight that truncates
+    /// a typed <c>0.4658</c> to <c>0.465</c> did not take the value, and answers with a different
+    /// number, so it is caught here exactly as it was before. A field the firmware answers with
+    /// letters, or with nothing, has no number to compare and is compared as text.
     /// </summary>
     private static bool Same(string sent, string? readBack)
-        => string.Equals(sent, readBack, StringComparison.Ordinal);
+    {
+        if (readBack is null)
+            return false;
+
+        return double.TryParse(sent, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out double want)
+                && double.TryParse(readBack, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out double got)
+            ? want.Equals(got)
+            : string.Equals(sent, readBack, StringComparison.Ordinal);
+    }
 
     private static async Task<T?> Safe<T>(Func<Task<T>> f, string what, List<string> errors)
     {
